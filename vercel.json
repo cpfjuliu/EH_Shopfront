@@ -1,0 +1,5 @@
+{
+  "installCommand": "npm install --dangerously-allow-all-scripts",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
+}
