@@ -1,16 +1,9 @@
-# Vercel deployment
+# Quick deployment
 
-This package is intentionally flat so it can be uploaded easily from a phone.
+1. Create or open a GitHub repository.
+2. Upload **all files from this folder directly to the repository root**.
+3. Import the repository into Vercel.
+4. Vercel reads `vercel.json` and runs the Vite build.
+5. If replacing an older version, commit the files and Vercel should redeploy automatically.
 
-Required files must all sit at the repository root, including:
-- index.html
-- main.jsx
-- App.jsx
-- experienceFlows.js
-- mockData.js
-- styles.css
-- package.json
-- vite.config.js
-- vercel.json
-
-Vercel settings are included in vercel.json.
+Do not upload the ZIP itself as the application. Unzip it first.

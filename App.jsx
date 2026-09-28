@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { experienceFlows, personaMeta } from './experienceFlows.js'
-import { chartData, dashboards, dataProducts, recentItems, userProfiles } from './mockData.js'
+import { chartData, dashboards, dataProducts, governanceBackstage, metrics, notifications, recentItems, userProfiles } from './mockData.js'
 
 const stars = [5, 7, 9, 11]
 const personas = ['analyst', 'business', 'system', 'partner']
@@ -32,7 +32,7 @@ function Icon({ name, size = 16 }) {
 
 function statusTone(value = '') {
   const v = String(value).toLowerCase()
-  if (/(healthy|ready|granted|approved|pass|current|enabled|included|verified|supported|none|complete|stable|on|allowed|available)/.test(v)) return 'success'
+  if (/(healthy|ready|granted|approved|pass|current|enabled|included|verified|certified|supported|none|complete|stable|on|allowed|available|monitored|monitoring)/.test(v)) return 'success'
   if (/(warning|pending|provisional|approval|delayed|review|164|45 days)/.test(v)) return 'warning'
   if (/(excluded|disabled|restricted|sensitive)/.test(v)) return 'muted'
   if (/(recommended|interpreted|governed|sdp|2 sdps)/.test(v)) return 'purple'
@@ -68,7 +68,7 @@ function Login({ onLogin }) {
           <div className="visual-stack">
             <div className="visual-row"><span>Student Attendance</span><Badge tone="success">Healthy</Badge></div>
             <div className="visual-row"><span>Student Identity</span><Badge tone="success">Healthy</Badge></div>
-            <div className="visual-row"><span>Persistent absence v3</span><Badge tone="purple">Governed</Badge></div>
+            <div className="visual-row"><span>Frequent absence rate v3</span><Badge tone="purple">Governed</Badge></div>
           </div>
           <div className="visual-answer">
             <div className="visual-spark">✦</div>
@@ -104,7 +104,7 @@ function Sidebar({ persona, activeNav, onNav }) {
       </div>
       <div className="sidebar-bottom">
         <div className="nav-caption">PLATFORM</div>
-        <button className="nav-item"><span className="nav-icon"><Icon name="shield"/></span><span>Governance</span></button>
+        <button className={`nav-item ${activeNav === 'Governance' ? 'active' : ''}`} onClick={() => onNav('Governance')}><span className="nav-icon"><Icon name="shield"/></span><span>Governance</span></button>
         <button className="nav-item"><span className="nav-icon"><Icon name="help"/></span><span>Help & support</span></button>
       </div>
     </aside>
@@ -113,13 +113,24 @@ function Sidebar({ persona, activeNav, onNav }) {
 
 function Topbar({ persona, onSearch, onLogout }) {
   const profile = userProfiles[persona]
+  const [open,setOpen] = useState(false)
+  const items = notifications[persona] || []
   return (
     <header className="topbar">
       <div className="brand"><div className="brand-mark">EH</div><span>Edu Hub</span></div>
       <button className="global-search" onClick={onSearch}><Icon name="search"/><span>{personaMeta[persona].search}</span><kbd>⌘ K</kbd></button>
       <div className="top-actions">
         <button className="icon-button" aria-label="Help"><Icon name="help"/></button>
-        <button className="icon-button" aria-label="Notifications"><Icon name="bell"/></button>
+        <div className="notification-wrap">
+          <button className="icon-button notification-button" aria-label="Notifications" onClick={() => setOpen(v => !v)}><Icon name="bell"/><span className="notification-dot">{items.length}</span></button>
+          {open && <div className="notification-panel">
+            <div className="notification-head"><strong>Notifications</strong><span>{items.length} items</span></div>
+            {items.map(([type,title,copy,tone],i) => <button className="notification-item" key={i} onClick={() => setOpen(false)}>
+              <span className={`notification-icon ${tone || 'neutral'}`}>{type === 'Data quality' ? '!' : type === 'Version' || type === 'Change' ? '↻' : '✓'}</span>
+              <span><strong>{title}</strong><small>{copy}</small></span>
+            </button>)}
+          </div>}
+        </div>
         <div className="profile-block"><div className="avatar">{profile.initials}</div><div className="profile-copy"><strong>{profile.name}</strong><span>{profile.role}</span></div></div>
         <button className="icon-button" aria-label="Sign out" onClick={onLogout}><Icon name="logout"/></button>
       </div>
@@ -127,7 +138,7 @@ function Topbar({ persona, onSearch, onLogout }) {
   )
 }
 
-function PrototypeControl({ persona, star, onPersona, onStar, onReset }) {
+function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBackstage }) {
   const [open, setOpen] = useState(false)
   return (
     <div className={`prototype-control ${open ? 'open' : ''}`}>
@@ -137,6 +148,7 @@ function PrototypeControl({ persona, star, onPersona, onStar, onReset }) {
         <div className="prototype-options">{personas.map((p) => <button key={p} className={p === persona ? 'selected' : ''} onClick={() => onPersona(p)}>{personaMeta[p].label}</button>)}</div>
         <div className="prototype-label">Experience vision</div>
         <div className="prototype-options">{stars.map((s) => <button key={s} className={s === star ? 'selected' : ''} onClick={() => onStar(s)}>{s}★</button>)}</div>
+        <button className="prototype-reset" onClick={onBackstage}><Icon name="shield" size={13}/>Open data owner / governance backstage</button>
         <button className="prototype-reset" onClick={onReset}><Icon name="refresh" size={13}/>Reset journey</button>
         <div className="prototype-note">Demo-only control. A real Edu Hub user would not see this.</div>
       </div>}
@@ -151,8 +163,8 @@ function SearchOverlay({ persona, onClose, onPick }) {
     ['Data product', 'Student Attendance', 'Daily attendance, absence categories and latecoming', 'Data products'],
     ['Data product', 'Student Identity', 'Core student identity and enrolment context', 'Data products'],
     ['Dashboard', 'Student Attendance Overview', 'School and cohort attendance trends', persona === 'business' ? 'Dashboards' : 'Analytics'],
-    ['Metric', 'Persistent absence v3', 'Governed MOE definition', persona === 'system' ? 'Data products' : 'Analytics'],
-    ['Workspace', 'Persistent absenteeism analysis', 'Recent analysis workspace', persona === 'partner' ? 'Secure workspace' : 'Workspace'],
+    ['Metric', 'Frequent absence rate v3', 'Students absent on ≥10% of instructional days · prototype governed measure', persona === 'system' ? 'Data products' : 'Analytics'],
+    ['Workspace', 'Frequent student absence analysis', 'Recent analysis workspace', persona === 'partner' ? 'Secure workspace' : 'Workspace'],
   ]
   const results = all.filter(x => x.join(' ').toLowerCase().includes(query.toLowerCase()))
   return <div className="overlay" onMouseDown={onClose}><div className="search-dialog" onMouseDown={e => e.stopPropagation()}>
@@ -187,11 +199,18 @@ function HomeContext({ persona, star, onStart }) {
   const flow = experienceFlows[persona][star]
   const profile = userProfiles[persona]
   const items = recentItems[persona]
+  const notice = notifications[persona]?.[0]
   const intro = {
-    analyst: ['Analyse with trusted data', 'Start with the data you need or describe the analysis you are trying to perform.'],
-    business: ['Get to the answer', 'Use trusted dashboards, insights and governed business questions without navigating technical datasets.'],
+    analyst: ['Analyse with trusted data', 'Start with trusted data or describe the analysis you are trying to perform. Your workspaces, approvals and definitions stay with you.'],
+    business: ['Get to the answer', 'Use trusted dashboards, briefings and governed business questions without navigating technical datasets.'],
     system: ['Build against dependable data products', 'Discover contracts, manage subscriptions and integrate applications without depending on internal storage details.'],
     partner: ['Work within your approved purpose', 'Access approved projects and secure workspaces with controls that follow the data interaction.'],
+  }[persona]
+  const continuity = {
+    analyst: [['Pending access','2'],['Saved analyses','5'],['Active workspaces','3']],
+    business: [['Followed views','6'],['Saved questions','4'],['Briefings','2']],
+    system: [['Subscriptions','4'],['Production consumers','3'],['Upcoming changes','1']],
+    partner: [['Active projects','1'],['Reviews due','1'],['Days to expiry','164']],
   }[persona]
   return <div className="home-content">
     <PageHeader title={`Good evening, ${profile.name.split(' ')[0]}`} subtitle={profile.context} />
@@ -199,11 +218,13 @@ function HomeContext({ persona, star, onStart }) {
       <div><div className="eyebrow">{star}★ EXPERIENCE</div><h2>{intro[0]}</h2><p>{intro[1]}</p></div>
       <Button kind="primary" onClick={onStart} icon="spark">{flow.entryLabel}</Button>
     </section>
+    {notice && <div className={`attention-banner ${notice[3] || 'neutral'}`}><div className="attention-icon">{notice[3]==='warning'?'!':'✓'}</div><div><strong>{notice[1]}</strong><span>{notice[2]}</span></div><Button>View</Button></div>}
     <div className="home-section-title">Recently used</div>
     <div className="recent-grid">{items.map(([type,name,status]) => <button className="recent-card" key={name} onClick={onStart}><div className="recent-type">{type}</div><strong>{name}</strong><span>{status}</span></button>)}</div>
-    <div className="home-grid">
-      <div className="home-panel"><div className="panel-title">Your activity</div><div className="activity-row"><span>Pending approvals</span><strong>{persona === 'partner' ? '1' : '2'}</strong></div><div className="activity-row"><span>Recently used assets</span><strong>8</strong></div><div className="activity-row"><span>Saved items</span><strong>5</strong></div></div>
-      <div className="home-panel"><div className="panel-title">Platform status</div><div className="status-line"><span className="status-dot ok"/>Standard data products healthy</div><div className="status-line"><span className="status-dot warn"/>2 attendance source feeds delayed</div><div className="status-line"><span className="status-dot ok"/>Access services operating normally</div></div>
+    <div className="home-grid home-grid-3">
+      <div className="home-panel"><div className="panel-title">My Edu Hub</div>{continuity.map(([label,value])=><div className="activity-row" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
+      <div className="home-panel"><div className="panel-title">Platform status</div><div className="status-line"><span className="status-dot ok"/>Certified data products operating normally</div><div className="status-line"><span className="status-dot warn"/>2 attendance source feeds delayed</div><div className="status-line"><span className="status-dot ok"/>Access services operating normally</div></div>
+      <div className="home-panel"><div className="panel-title">Trust by default</div><div className="status-line"><Icon name="shield" size={13}/><span>Definitions, lineage and quality stay attached to use</span></div><div className="status-line"><Icon name="refresh" size={13}/><span>Changes are versioned and consumer impact checked</span></div><div className="status-line"><Icon name="check" size={13}/><span>Purpose and permissions are applied throughout</span></div></div>
     </div>
   </div>
 }
@@ -224,13 +245,30 @@ function CatalogScreen({ screen, onNext }) {
 function AssetScreen({ screen, onNext, onBack }) {
   const p = dataProducts[screen.productId]
   const [tab,setTab] = useState('Overview')
+  const tabs = ['Overview','Schema','Delivery','Versions','Consumers','Lineage','Quality','Access']
   return <div className="page-content"><PageHeader title={p.name} subtitle={p.description} breadcrumbs={['Catalog','Student',p.name]} actions={<><Button>{screen.secondaryLabel || 'Open in SQL'}</Button><Button kind="primary" onClick={onNext}>{screen.primaryLabel || 'Request access'}</Button></>} />
-    <div className="badge-row"><Badge tone="purple">{p.type}</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge><Badge>{p.freshness}</Badge></div>
-    <div className="meta-grid"><Meta label="Owner" value={p.owner}/><Meta label="Updated" value={p.updated}/><Meta label="Coverage" value={p.coverage}/><Meta label="Quality" value={p.quality}/></div>
-    <div className="tabs">{['Overview','Schema','Lineage','Quality','Permissions'].map(t => <button key={t} className={tab===t?'active':''} onClick={() => setTab(t)}>{t}</button>)}</div>
-    {tab === 'Overview' || tab === 'Schema' ? <div className="asset-layout"><div><h3>Key fields</h3><div className="data-table schema-table"><div className="table-row table-head"><span>Field</span><span>Type</span><span>Description</span></div>{p.fields.map(f => <div className="table-row" key={f[0]}><span className="linkish mono">{f[0]}</span><span className="mono">{f[1]}</span><span>{f[2]}</span></div>)}</div></div><aside className="asset-aside"><Info label="Business definition" value={p.definition}/><Info label="Source" value={p.source}/><Info label="Recommended join" value="Student Identity on student_id"/></aside></div> : <EmptyTab name={tab}/>} 
+    <div className="badge-row"><Badge tone="purple">{p.type}</Badge><Badge>{p.lifecycle}</Badge><Badge>{p.version}</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge></div>
+    <div className="trust-banner"><div className="trust-icon"><Icon name="shield" size={18}/></div><div><strong>Trusted product</strong><span>Authoritative: {p.authoritative} · Last validated {p.lastValidated} · Changes are versioned and assessed against registered consumers.</span></div><Badge tone="success">Certified</Badge></div>
+    <div className="meta-grid"><Meta label="Owner" value={p.owner}/><Meta label="Freshness" value={p.freshness}/><Meta label="Coverage" value={p.coverage}/><Meta label="Quality" value={p.quality}/></div>
+    <div className="tabs scroll-tabs">{tabs.map(t => <button key={t} className={tab===t?'active':''} onClick={() => setTab(t)}>{t}</button>)}</div>
+    <ProductTabContent p={p} tab={tab}/>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
+}
+
+function ProductTabContent({ p, tab }) {
+  if (tab === 'Overview') return <div className="asset-layout"><div>
+    <h3>What this product is for</h3><p className="body-copy">{p.definition}</p>
+    <h3 className="section-title">Sample data</h3><SimpleTable columns={p.fields.slice(0,5).map(f=>f[0])} rows={p.sampleRows}/>
+  </div><aside className="asset-aside"><Info label="Lifecycle" value={`${p.lifecycle} · ${p.version}`}/><Info label="Data steward" value={p.steward}/><Info label="Source" value={p.source}/><Info label="Approved use" value={p.allowedUse}/><Info label="Recommended join" value={p.id === 'attendance' ? 'Student Identity on student_id' : 'Use governed identifiers'}/></aside></div>
+  if (tab === 'Schema') return <div className="product-tab"><div className="tab-intro"><div><h3>Schema</h3><p>Contracted fields with classification and validation expectations.</p></div><Badge>{p.version}</Badge></div><SimpleTable columns={['Field','Type','Description','Classification','Rule']} rows={p.fields}/><h3 className="section-title">Masked sample rows</h3><SimpleTable columns={p.fields.slice(0,5).map(f=>f[0])} rows={p.sampleRows}/></div>
+  if (tab === 'Delivery') return <div className="product-tab"><div className="tab-intro"><div><h3>Delivery</h3><p>Supported consumption routes are part of the product contract, not ad-hoc integration choices.</p></div><Badge tone="success">Monitored</Badge></div><SimpleTable columns={['Route','Interface','Cadence','Intended consumers','Commitment']} rows={p.deliveries}/></div>
+  if (tab === 'Versions') return <div className="product-tab"><div className="tab-intro"><div><h3>Versions</h3><p>Consumers can see what changed, what remains supported and when action is required.</p></div><Badge>{p.lifecycle}</Badge></div><SimpleTable columns={['Version','Status','Released','Change','Supported until']} rows={p.versions}/></div>
+  if (tab === 'Consumers') return <div className="product-tab"><div className="tab-intro"><div><h3>Registered consumers</h3><p>Knowing who depends on the product lets Edu Hub assess impact before changes are released.</p></div><Badge>{p.consumers.length} consumers</Badge></div><SimpleTable columns={['Consumer','Route','Contract','Environment','Last activity']} rows={p.consumers}/></div>
+  if (tab === 'Lineage') return <div className="product-tab"><div className="tab-intro"><div><h3>Lineage</h3><p>Trace the product from authoritative source through standardisation to consumption.</p></div></div><SimpleTable columns={['Node','Stage','What happens','Status']} rows={p.lineage}/></div>
+  if (tab === 'Quality') return <div className="product-tab"><div className="tab-intro"><div><h3>Quality</h3><p>Quality checks are evaluated on each refresh and surfaced to consumers when degraded.</p></div><Badge>{p.quality}</Badge></div><SimpleTable columns={['Check','Expectation','Latest','Status']} rows={p.qualityChecks}/></div>
+  if (tab === 'Access') return <div className="product-tab"><div className="tab-intro"><div><h3>Access policy</h3><p>Access depends on user type, purpose and approved delivery route.</p></div><Badge>{p.classification}</Badge></div><SimpleTable columns={['Consumer type','Access','Condition','Decision']} rows={p.permissions}/></div>
+  return null
 }
 
 function Meta({label,value}) { return <div className="meta-card"><span>{label}</span><strong>{value}</strong></div> }
@@ -256,7 +294,9 @@ function IntentScreen({ screen, onNext, onBack, loading }) {
 }
 
 function PlanScreen({ screen, onNext, onBack }) {
+  const hasFrequent = JSON.stringify(screen.rows).toLowerCase().includes('frequent absence')
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub',screen.title]} />
+    {hasFrequent && <div className="definition-callout"><div><strong>Frequent absence rate</strong><span>{metrics.frequentAbsence.description}</span></div><Button>Definition details</Button></div>}
     <div className="plan-layout"><div className="plan-table">{screen.rows.map(([label,value,note,status]) => <div className="plan-row" key={label+value}><div className="plan-label">{label}</div><div><strong>{value}</strong><span>{note}</span></div><Badge>{status}</Badge></div>)}</div>
     <aside className="summary-panel"><h3>Review</h3>{screen.checks?.map(([label,value]) => <div className="summary-line" key={label}><span>{label}</span><Badge>{value}</Badge></div>)}</aside></div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
@@ -279,6 +319,7 @@ function ProgressScreen({ screen, onNext, onBack, loading }) {
 
 function WorkspaceScreen({ screen, onBack }) {
   return <div className="page-content workspace-page"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Workspace',screen.title]} actions={<><Button>Share</Button><Button kind="primary">Run all</Button></>} />
+    <TransparencyControls mode="analysis" />
     <div className="editor-shell"><aside className="editor-left"><div className="editor-panel-head">Analysis assets <span>＋</span></div><button className="editor-file active">01_analysis.sql</button><button className="editor-file">02_breakdown.sql</button><button className="editor-file">Definitions</button><button className="editor-file">Lineage</button></aside>
     <main className="editor-main"><div className="editor-toolbar"><Button kind="primary">Run</Button>{screen.badges?.map(b => <Badge key={b}>{b}</Badge>)}<span className="saved-state">Saved just now</span></div><pre className="code-editor">{screen.code}</pre><div className="editor-results">{screen.chart ? <BarChart name={screen.chart}/> : screen.resultRows ? <SimpleTable columns={screen.resultColumns} rows={screen.resultRows}/> : <div className="result-placeholder">Run the analysis to refresh results.</div>}</div></main>
     <aside className="assistant-panel"><div className="editor-panel-head">Genie Code</div><div className="assistant-message">{screen.assistant}</div><div className="assistant-message user">Explain the assumptions behind this analysis.</div><div className="assistant-input">Ask about this analysis…</div></aside></div>
@@ -301,7 +342,8 @@ function DashboardDetail({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Analytics','Dashboards',d.name]} actions={<Button kind="primary" onClick={onNext}>{screen.primaryLabel}</Button>} />
     <div className="badge-row"><Badge tone="purple">Dashboard</Badge><Badge>Trusted</Badge><Badge>Daily</Badge></div>
     <div className="meta-grid"><Meta label="Owner" value={d.owner}/><Meta label="Updated" value={d.updated}/><Meta label="Audience" value="HQ officers"/><Meta label="Definition set" value={d.definition}/></div>
-    <div className="preview-card"><div className="preview-label">Preview</div><div className="metric-grid"><Metric label="Attendance rate" value="92.8%"/><Metric label="Persistent absence" value="4.7%"/><Metric label="Schools above threshold" value="12"/></div><BarChart name="monthly"/></div>
+    <div className="definition-callout"><div><strong>Frequent absence rate</strong><span>{metrics.frequentAbsence.description}</span></div><Badge tone="purple">{metrics.frequentAbsence.version}</Badge></div>
+    <div className="preview-card"><div className="preview-label">Preview</div><div className="metric-grid"><Metric label="Attendance rate" value="92.8%"/><Metric label="Students with frequent absence" value="4.7%"/><Metric label="Schools above threshold" value="12"/></div><BarChart name="monthly"/></div>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
 }
@@ -309,7 +351,9 @@ function DashboardDetail({ screen, onNext, onBack }) {
 function Metric({label,value}) { return <div className="metric-card"><span>{label}</span><strong>{value}</strong></div> }
 
 function DashboardScreen({ screen, onBack }) {
+  const mentionsFrequent = JSON.stringify(screen).toLowerCase().includes('frequent absence')
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Analytics',screen.title]} actions={<><Button>Export</Button><Button>Share</Button></>} />
+    {mentionsFrequent && <div className="definition-callout"><div><strong>What “frequent absence” means here</strong><span>{metrics.frequentAbsence.description}</span></div><Button>View definition</Button></div>}
     <div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>
     <div className="dashboard-layout"><div className="chart-card"><h3>Trend</h3><BarChart name={screen.chart}/></div><div className="table-card"><h3>Highlights</h3><SimpleTable columns={['Item','Change']} rows={screen.table}/></div></div>
     <ActionRow screen={{}} onBack={onBack}/>
@@ -323,8 +367,22 @@ function RecommendationsScreen({ screen, onNext, onBack }) {
   </div>
 }
 
+function TransparencyControls({ mode = 'answer' }) {
+  const [open,setOpen] = useState(null)
+  const content = {
+    why: mode === 'answer'
+      ? 'The result is based on the largest term-on-term change using a governed attendance measure, with delayed feeds prevented from being presented as current.'
+      : 'The analysis plan uses the minimum fields required for the question and a governed join between Student Attendance and Student Identity.',
+    data: 'Student Attendance v2.3 and Student Identity v1.8. Both are certified Standard Data Products with current lineage and quality status.',
+    assumptions: `Frequent absence rate uses the prototype rule: students absent on 10% or more instructional days in the selected period. Two delayed school feeds are excluded from strong current-period conclusions.`,
+  }
+  const buttons = [['why', mode === 'answer' ? 'Why this answer?' : 'Why this analysis?'],['data','What data was used?'],['assumptions','Show assumptions']]
+  return <div className="transparency-wrap"><div className="transparency-actions">{buttons.map(([key,label])=><button key={key} className={open===key?'active':''} onClick={()=>setOpen(open===key?null:key)}>{label}</button>)}</div>{open && <div className="transparency-drawer"><div><Icon name="shield" size={17}/></div><div><strong>{buttons.find(b=>b[0]===open)?.[1]}</strong><p>{content[open]}</p></div><button onClick={()=>setOpen(null)} aria-label="Close"><Icon name="close" size={14}/></button></div>}</div>
+}
+
 function AnswerScreen({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} breadcrumbs={['Edu Hub',screen.title]} />
+    <TransparencyControls mode="answer" />
     <div className="answer-layout"><main className="answer-card"><h2>{screen.headline}</h2><p>{screen.body}</p><div className="metric-grid metric-grid-3">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>{screen.chart && <BarChart name={screen.chart}/>}</main>
     <aside className="evidence-panel"><h3>Evidence & context</h3>{screen.evidence.map(([l,v]) => <div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
@@ -346,13 +404,13 @@ function ApiScreen({ screen, onNext, onBack }) {
 
 function ContractScreen({ screen, onNext, onBack }) {
   const p = dataProducts[screen.productId]
-  const [delivery,setDelivery] = useState(screen.delivery[0])
+  const [tab,setTab] = useState('Contract')
+  const tabs = ['Contract','Schema','Delivery','Versions','Consumers']
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Data products',p.name]} />
-    <div className="badge-row"><Badge tone="purple">API-ready</Badge><Badge>v2.3</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge></div>
-    <div className="meta-grid"><Meta label="Freshness" value={p.freshness}/><Meta label="SLO" value="99.5% delivery"/><Meta label="Owner" value={p.owner}/><Meta label="Compatibility" value="v2 backward compatible"/></div>
-    <div className="tabs"><button className="active">Contract</button><button>Schema</button><button>Delivery</button><button>Versions</button><button>Consumers</button></div>
-    <div className="data-table schema-table"><div className="table-row table-head"><span>Field</span><span>Type</span><span>Description</span></div>{p.fields.slice(0,4).map(f=><div className="table-row" key={f[0]}><span className="linkish mono">{f[0]}</span><span className="mono">{f[1]}</span><span>{f[2]}</span></div>)}</div>
-    <h3 className="section-title">Delivery options</h3><div className="delivery-grid">{screen.delivery.map(d=><button key={d} className={`delivery-card ${delivery===d?'selected':''}`} onClick={()=>setDelivery(d)}><strong>{d}</strong><span>{d==='REST API'?'Cross-platform application integration.':d==='Direct query'?'Approved analytical consumers.':'Scheduled batch delivery.'}</span></button>)}</div>
+    <div className="badge-row"><Badge tone="purple">API-ready</Badge><Badge>{p.lifecycle}</Badge><Badge>{p.version}</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge></div>
+    <div className="meta-grid"><Meta label="Freshness" value={p.freshness}/><Meta label="SLO" value="99.5% delivery"/><Meta label="Owner" value={p.owner}/><Meta label="Compatibility" value="Backward compatible within major version"/></div>
+    <div className="tabs scroll-tabs">{tabs.map(t=><button key={t} className={tab===t?'active':''} onClick={()=>setTab(t)}>{t}</button>)}</div>
+    {tab === 'Contract' ? <div className="contract-overview"><div className="panel-card"><h3>Business contract</h3><div className="contract-key"><span>Product</span><strong>{p.name} {p.version}</strong></div><div className="contract-key"><span>Promise</span><strong>Stable attendance semantics independent of storage or platform implementation</strong></div><div className="contract-key"><span>Change policy</span><strong>Breaking changes require a new major version and consumer impact review</strong></div><div className="contract-key"><span>Freshness</span><strong>{p.freshness}</strong></div></div><aside className="summary-panel"><h3>Contract health</h3><div className="summary-line"><span>Registered consumers</span><strong>{p.consumers.length}</strong></div><div className="summary-line"><span>Latest quality</span><Badge>{p.quality}</Badge></div><div className="summary-line"><span>Last validated</span><strong>{p.lastValidated}</strong></div><div className="summary-line"><span>Lifecycle</span><Badge>{p.lifecycle}</Badge></div></aside></div> : <ProductTabContent p={p} tab={tab}/>} 
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
 }
@@ -383,6 +441,28 @@ function ChangeScreen({ screen, onNext, onBack }) {
     <div className="success-banner"><div className="check-circle large"><Icon name="check" size={20}/></div><div><strong>Migration completed successfully</strong><span>{screen.message}</span></div></div><div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v])=><Metric key={l} label={l} value={v}/>)}</div><ActionRow screen={screen} onNext={onNext} onBack={onBack}/></div>
 }
 
+function IncidentScreen({ screen, onNext, onBack }) {
+  return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub','Data health']} />
+    <div className="incident-banner"><div className="incident-mark">!</div><div><strong>{screen.severity}</strong><p>{screen.summary}</p></div></div>
+    <div className="incident-grid"><div className="panel-card"><h3>Affected data</h3><SimpleTable columns={['Feed','Latest state','Treatment']} rows={screen.affected}/></div><aside className="summary-panel"><h3>Safe handling</h3>{screen.handling.map(([l,v])=><div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div>
+    <div className="definition-callout"><div><strong>Why this matters</strong><span>Higher-star experience does not hide failures. It detects them early, makes the impact explicit and offers a safe recovery path.</span></div><Badge tone="warning">Degraded</Badge></div>
+    <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
+  </div>
+}
+
+function GovernanceScreen({ onBack }) {
+  return <div className="page-content"><PageHeader title="Data owner & governance backstage" subtitle="The operating layer behind the consumer experience. This is a prototype backstage view, not a fifth consumer persona." breadcrumbs={['Platform','Governance']} />
+    <div className="metric-grid metric-grid-4">{governanceBackstage.metrics.map(([l,v])=><Metric key={l} label={l} value={v}/>)}</div>
+    <div className="governance-grid">
+      <div className="panel-card"><div className="tab-intro"><div><h3>Review queue</h3><p>Ownership, certification and purpose reviews that require human accountability.</p></div><Badge tone="warning">3 open</Badge></div><SimpleTable columns={['Item','Review','Owner','Due','Status']} rows={governanceBackstage.reviewQueue}/></div>
+      <div className="panel-card"><div className="tab-intro"><div><h3>Data quality incidents</h3><p>Consumer-facing impact is carried with the product, not managed only in a separate ticket.</p></div></div><SimpleTable columns={['Incident','Scope','Opened','Consumer handling','State']} rows={governanceBackstage.incidents}/></div>
+    </div>
+    <div className="panel-card governance-changes"><div className="tab-intro"><div><h3>Upcoming product changes</h3><p>Every proposed change is tested against registered consumers before release.</p></div><Button>Review change policy</Button></div><SimpleTable columns={['Product','Stage','Change','Consumer impact']} rows={governanceBackstage.changes}/></div>
+    <div className="definition-callout"><div><strong>Governance by design</strong><span>Owners certify definitions and permitted uses; the platform applies those decisions through access, contracts, quality signals, lifecycle and audit.</span></div><Badge tone="purple">Backstage</Badge></div>
+    <ActionRow screen={{}} onBack={onBack}/>
+  </div>
+}
+
 function renderScreen(screen, props) {
   const map = {
     catalog: CatalogScreen,
@@ -405,12 +485,15 @@ function renderScreen(screen, props) {
     conversation: ConversationScreen,
     consumerHealth: ConsumerHealth,
     change: ChangeScreen,
+    incident: IncidentScreen,
+    governance: GovernanceScreen,
   }
   const Component = map[screen.kind] || TableScreen
   return <Component screen={screen} {...props}/>
 }
 
 function manualScreenFor(persona, label) {
+  if (/governance/i.test(label)) return { kind:'governance', title:'Governance' }
   if (/home/i.test(label)) return null
   if (/data product/i.test(label)) return experienceFlows.analyst[5].screens[0]
   if (/analytics|insights|dashboards/i.test(label)) return experienceFlows.business[5].screens[2]
@@ -421,7 +504,7 @@ function manualScreenFor(persona, label) {
   if (/secure workspace/i.test(label)) return experienceFlows.partner[9].screens[2]
   if (/agreement/i.test(label)) return { kind:'table', title:'Agreements', subtitle:'Data-sharing agreements for your organisation.', columns:['Agreement','Purpose','Status','Expiry'], rows:[['DSA-2041','Programme evaluation','Active','24 Mar 2027'],['DSA-1978','Research collaboration','Pending','—']] }
   if (/ask edu hub/i.test(label)) return experienceFlows.business[9].screens[0]
-  if (/saved views/i.test(label)) return { kind:'discover', title:'Saved views', subtitle:'Dashboards and insights you have saved.', search:'', items:[['Dashboard','Student Attendance Overview','School and cohort attendance trends.','Trusted'],['Explorer','Persistent Absence Explorer','Saved business explorer.','Trusted']] }
+  if (/saved views/i.test(label)) return { kind:'discover', title:'Saved views', subtitle:'Dashboards and insights you have saved.', search:'', items:[['Dashboard','Student Attendance Overview','School and cohort attendance trends.','Trusted'],['Explorer','Students Missing School Frequently','Saved business explorer with governed definition.','Trusted']] }
   return { kind:'table', title:label, subtitle:'Prototype module.', columns:['Item','Status'], rows:[['Example item','Available']] }
 }
 
@@ -481,7 +564,7 @@ function App() {
     <main className="main-area">
       {manualView ? renderScreen(manualView,{onNext:()=>{},onBack:back,loading:false}) : journey ? renderScreen(screen,{onNext:next,onBack:back,loading,atEnd:step===flow.screens.length-1}) : <HomeContext persona={persona} star={star} onStart={startJourney}/>} 
     </main>
-    <PrototypeControl persona={persona} star={star} onPersona={changePersona} onStar={changeStar} onReset={reset}/>
+    <PrototypeControl persona={persona} star={star} onPersona={changePersona} onStar={changeStar} onReset={reset} onBackstage={() => onNav('Governance')}/>
     {searchOpen && <SearchOverlay persona={persona} onClose={() => setSearchOpen(false)} onPick={onNav}/>} 
   </div>
 }

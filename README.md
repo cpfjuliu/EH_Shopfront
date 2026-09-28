@@ -1,61 +1,41 @@
-# Edu Hub Experience Prototype
+# Edu Hub Experience Vision Prototype
 
-A stateful React/Vite prototype for exploring 5★ / 7★ / 9★ / 11★ experiences across four Edu Hub personas:
+Interactive React/Vite prototype for exploring 5★, 7★, 9★ and 11★ Edu Hub experiences across four consumer personas:
 
 - Analyst
 - Business user
 - System / application developer
 - External partner
 
-The prototype is intentionally **not** a collection of static HTML pages. It uses shared components, shared data objects and data-driven experience flows so the UI behaves like one product.
+The prototype is intentionally backed by central mock data rather than separate static pages, so common product behaviour stays consistent across personas and star levels.
 
-## What is included
+## Revamp highlights
 
-- Dummy MOE SSO login
-- Role-aware home screen
-- Persistent Databricks-inspired app shell
-- Global search / command palette
-- Persona-specific navigation
-- Demo-only persona and experience-level control
-- Stateful journeys with back/next behaviour
-- Simulated AI / orchestration loading states
-- Data catalogue and data-product details
-- Access request form
-- Provisioning progress
-- SQL / analysis workspace
-- Business dashboards and governed Q&A
-- Developer contracts, APIs and integration scaffolds
-- External partner project and controlled-workspace flows
-- Responsive desktop / tablet / mobile layout
-
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-Then open the URL shown by Vite, normally `http://localhost:5173`.
+- Plain-language attendance scenario: "students missing school frequently" replaces the jargon-heavy "persistent absenteeism" wording.
+- Governed metric shown as **Frequent absence rate**, with a visible prototype definition: students absent on 10% or more instructional days in the selected period.
+- Fully populated Standard Data Product views for Schema, Delivery, Versions, Consumers, Lineage, Quality and Access.
+- Mock contract lifecycle, compatibility windows, registered consumers and delivery commitments.
+- Data-quality failure and recovery state for the analyst 9★ journey.
+- Trust and transparency controls: Why this answer, What data was used, Show assumptions.
+- Notifications and change-management signals.
+- Role-aware "My Edu Hub" continuity on the home page.
+- Data owner / governance backstage view, accessible from the sidebar or prototype control.
+- Product-health mock metrics for reuse, request-to-use time and contract protection.
 
 ## Deploy to Vercel
 
-1. Upload this entire project to a GitHub repository.
-2. In Vercel, choose **Add New → Project**.
-3. Import the GitHub repository.
-4. Vercel should detect **Vite** automatically.
-5. Build command: `npm run build`
-6. Output directory: `dist`
-7. Deploy.
+Upload every file in this folder to the repository root. The project intentionally uses a flat structure so phone uploads are easier.
 
-No environment variables or backend services are required.
+Vercel configuration is included in `vercel.json`:
 
-## Recommended demo sequence
+- Install: `npm install --dangerously-allow-all-scripts`
+- Build: `npm run build`
+- Output: `dist`
 
-Start with **Analyst → 5★ → 7★ → 9★ → 11★** to show the same broad need with progressively more complexity absorbed by Edu Hub. Then switch persona to show that the entry point is role-aware:
+Vercel should detect the Vite application automatically.
 
-- Analyst: data / analysis intent
-- Business: business question / trusted insight
-- System: contract / application requirement
-- External partner: approved project / approved outcome
+## Demo control
 
-The floating **Prototype** control is demo-only and would not exist in the production product.
+The bottom-right prototype control is intentionally not part of the proposed end-user product. It lets the presenter switch persona and experience level and open the governance backstage view.
+
+All data and metrics shown are synthetic prototype content and should not be treated as production MOE definitions or operational figures.
