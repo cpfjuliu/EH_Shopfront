@@ -83,7 +83,7 @@ export const experienceCapabilities = Object.fromEntries(personas.map(persona=>[
 ]))
 
 export function getExperience(persona, star) {
-  return personas.includes(persona) && stars.includes(Number(star)) ? experienceCapabilities[persona][Number(star)] : experienceCapabilities.analyst[7]
+  return personas.includes(persona) && stars.includes(Number(star)) ? experienceCapabilities[persona][Number(star)] : experienceCapabilities.business[5]
 }
 export function hasCapability(config, feature) { return config.features.includes(feature) }
 export function routeHash(config, route) { return `#/${config.scope}/${route}` }

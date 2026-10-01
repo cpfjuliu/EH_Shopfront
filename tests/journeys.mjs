@@ -159,7 +159,7 @@ try {
   await button('Sign out').click();await visible(button('Continue with MOE SSO'))
   await page.evaluate(()=>{localStorage.setItem('eh_persona','invalid');localStorage.setItem('eh_star','12');localStorage.setItem('eh_logged_in','1')})
   await page.reload();await visible(page.locator('.prototype-trigger'))
-  assert((await page.locator('.prototype-trigger').innerText()).includes('Analyst · 7★'))
+  assert((await page.locator('.prototype-trigger').innerText()).includes('Business · 5★'))
   assert.equal(dashboardRows('Mathematics','Secondary 2','School A')[0][3],'-12.0 pp')
   assert.deepEqual(errors,[],'Browser console/runtime errors')
   console.log('PASS follow-ups, blank input, pending-transition cancellation, context, mobile, governance, invalid saved state; no console/runtime errors')
