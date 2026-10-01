@@ -18,7 +18,6 @@ async function select(persona,star) {
   await page.locator('.prototype-options').getByRole('button',{name:personaMeta[persona].label,exact:true}).click()
   await button(`${star}★`).click()
   await page.locator('.prototype-trigger').click()
-  if(star!==11) await page.locator('.main-area').getByRole('button',{name:experienceFlows[persona][star].entryLabel,exact:true}).click()
 }
 async function advance(screen) {
   await button(screen.primaryLabel).click()
@@ -33,6 +32,7 @@ try {
     const screens=experienceFlows[persona][star].screens
     for(let i=0;i<screens.length;i++) {
       const screen=screens[i]
+      assert.equal(await page.locator('.app-shell').getAttribute('data-experience'),`${persona}/${star}`)
       await visible(page.locator('.main-area'))
       if(screen.kind==='intent') await visible(page.getByRole('heading',{name:screen.title,exact:true}))
       else await visible(page.getByRole('heading',{name:screen.title || 'Student Academic Results',exact:true}).first())
@@ -44,6 +44,8 @@ try {
       }
       if(persona==='analyst' && star===9 && screen.kind==='plan') await page.getByLabel('Override analysis level').selectOption('Secondary 2')
       if(screen.kind==='workspace') {
+        assert.equal(await page.locator('.assistant-panel').count(),star===5?0:1)
+        assert.equal(await button('Why this answer?').count(),0)
         const sql=page.getByRole('textbox',{name:'Review and edit SQL'})
         if(star===9) assert((await sql.inputValue()).includes("AND level = 'Secondary 2'"))
         if(star===5) {await sql.fill('SELECT subject FROM student_academic_results;');await button('Run').click();await visible(page.getByText('SQL saved for review.',{exact:false}))}
@@ -84,8 +86,13 @@ try {
           assert.equal(await page.getByRole('heading',{name:'Approved analysis',exact:true}).count(),0)
         }
         await page.getByLabel('Entitlement',{exact:true}).selectOption('Active')
-        await visible(page.getByRole('heading',{name:'Approved analysis',exact:true}))
+        await visible(page.getByRole('heading',{name:screen.subset?'Approved data package':'Approved analysis',exact:true}))
       }
+      assert.equal(await page.locator('.app-shell').getAttribute('data-experience'),`${persona}/${star}`)
+      assert.deepEqual(await page.evaluate(()=>[localStorage.getItem('eh_persona'),localStorage.getItem('eh_star')]),[persona,String(star)])
+      const forbidden=persona==='business'?['Generate analysis','Request system access','Propose minimum interaction']:persona==='analyst'?['Ask Edu Hub','Request system access','Propose minimum interaction']:persona==='system'?['Ask Edu Hub','Generate analysis','Propose minimum interaction']:['Ask Edu Hub','Generate analysis','Request system access']
+      if(star===5) forbidden.push('Propose analytical method','Generate scaffold and tests','Recommend project package','Recommend integration')
+      for(const name of forbidden) assert.equal(await page.locator('.main-area').getByRole('button',{name,exact:true}).count(),0,`${persona} ${star}: ${name} leaked`)
       if(i<screens.length-1) await advance(screen)
     }
     await button('Back').click()
@@ -111,14 +118,25 @@ try {
   await button('Back').click()
   await button('What is driving School A?').click()
   await visible(page.getByRole('heading',{name:'School A: the largest change is in Secondary 2'}))
+  await page.getByLabel('Ask a follow-up',{exact:true}).fill('What is driving the decline in School A?')
+  await button('Ask follow-up').click()
+  await visible(page.getByRole('heading',{name:'School A: the largest change is in Secondary 2'}))
+  await button('Inspect evidence & quality').click()
+  await button('Back').click()
+  await visible(page.getByRole('heading',{name:'School A: the largest change is in Secondary 2'}))
+  await page.getByLabel('Ask a follow-up',{exact:true}).fill('Show me whether this is concentrated in a particular level.')
+  await button('Ask follow-up').click()
+  await visible(page.getByRole('heading',{name:'Secondary 2 accounts for most of the Mathematics decline'}))
   assert((await page.locator('.main-area').innerText()).includes('2026 vs 2025'))
-  await page.locator('.sidebar').getByRole('button',{name:'Home',exact:true}).click()
-  await visible(page.getByRole('heading',{name:'Your Results briefing',exact:true}))
+  await page.locator('.sidebar').getByRole('button',{name:'Results briefing',exact:true}).click()
+  await visible(page.getByRole('heading',{name:'Your Academic Results Briefing',exact:true}))
   await page.setViewportSize({width:390,height:844})
   await page.screenshot({path:'test-results/business-11-mobile.png',fullPage:true})
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile page overflows')
   await page.setViewportSize({width:1440,height:1000})
-  await page.locator('.sidebar').getByRole('button',{name:'Governance',exact:true}).click()
+  await page.locator('.prototype-trigger').click()
+  await button('Open data owner / governance backstage').click()
+  await page.locator('.prototype-trigger').click()
   await visible(page.getByRole('heading',{name:'Data owner & governance backstage',exact:true}))
   assert((await page.locator('.main-area').innerText()).includes('Student Academic Results'))
   await button('Sign out').click();await visible(button('Continue with MOE SSO'))

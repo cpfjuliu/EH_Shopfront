@@ -11,7 +11,15 @@ React/Vite prototype demonstrating 16 role-aware journeys using **Student Academ
 | System | Inspect a contract and integrate manually | Describe the application; coordinate identity, entitlement, sandbox and subscription | Review fields, freshness, fallback and versions; inspect scaffold and failure scenarios | See stable contract health first; inspect migration with zero consumer code changes |
 | Partner | Submit purpose, sponsor, duration and data request; receive a controlled subset | Describe the need; receive a minimum package, synthetic sample and workspace | Review minimisation, aggregation, masking, pseudonymisation and expiry | Receive an approved aggregate evaluation first; inspect controls without raw exports |
 
-11★ opens directly on the outcome. Lower levels retain their role-aware home and explicit starting action. The bottom-right persona/star selector is a separate presenter control.
+Each combination opens directly on its own starting experience. Business 9★ starts with Ask Edu Hub; Business 11★ starts with Your Academic Results Briefing. There is one primary navigation entry per combination. The bottom-right persona/star selector is a separate presenter control and is the only place that changes simulated identity or star.
+
+## Isolation model
+
+`experienceCapabilities.js` defines all 16 states, including navigation, routes, features, home cards, contextual actions, search results and notifications. Stars are independent interaction models rather than cumulative feature tiers. Screen content remains in `experienceFlows.js`.
+
+The shared transition function validates the scope and originating route of actions. Journey steps unlock sequentially; URLs and history cannot grant prerequisites. Hash routes carry persona/star for clarity but never change the selected experience. Switching the demo selector resets journey state, closes overlays, cancels pending transitions and creates a new history session. Reloading a protected route returns to the current landing.
+
+Business 11★ can inspect a supporting dashboard; Analyst 11★ can inspect a read-only source SDP. These are secondary evidence actions, not competing primary journeys. Governance backstage is available only from the demo control. Partner 5★/7★ receive controlled packages; Partner 9★ reviews minimisation before an aggregate result; Partner 11★ receives the approved outcome first.
 
 ## Trust and limitations
 
@@ -44,7 +52,9 @@ npm test
 
 Optional environment variables: `TEST_URL` (default `http://127.0.0.1:5173`) and `BROWSER_EXECUTABLE` (installed Chrome/Chromium executable). Screenshots go to ignored `test-results/`.
 
-The suite walks all 16 journeys and checks SDP tabs, manual/prepared filters, reactive Q&A, proactive briefings, context, analyst overrides, contract failures, partner expiry/denial, Back, sidebar Q&A, blank input, transition cancellation, mobile overflow, governance, logout and invalid stored preferences. Browser runtime and console errors fail the run.
+`npm test` runs capability tests, the 16-journey browser suite and the 16-combination isolation audit. Run them individually with `npm run test:capabilities`, `npm run test:journeys` and `npm run test:isolation`. The capability suite needs no browser/server.
+
+The journey suite checks SDP tabs, manual/prepared filters, reactive Q&A, proactive briefings, preserved context, analyst overrides, contract failures, partner expiry/denial, navigation, blank input, transition cancellation, mobile overflow, governance, logout and invalid stored preferences. The isolation suite exercises every scoped search result, notifications, contextual actions, recent cards, all foreign persona/star URLs, locked routes, reloads and browser back/forward. Browser runtime and console errors fail both suites. See `ISOLATION_AUDIT.md` for the acceptance matrix; the browser audit also writes ignored `test-results/isolation-audit.json` and 16 landing screenshots.
 
 The existing Vite 5 toolchain is retained. `npm audit` reports two development-tool vulnerabilities (Vite/esbuild), requiring a separate toolchain upgrade. Keep the dev server on loopback. Production output is static.
 

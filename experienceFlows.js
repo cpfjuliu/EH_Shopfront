@@ -293,7 +293,7 @@ export const experienceFlows = {
         {
           "kind": "briefing",
           "audience": "business",
-          "title": "Your Results briefing",
+          "title": "Your Academic Results Briefing",
           "subtitle": "Prepared for Julius · Business Officer · Followed topic: Academic Results · 2026 vs 2025",
           "primaryLabel": "Explore drivers"
         },
@@ -331,7 +331,7 @@ export const experienceFlows = {
           "title": "Student Academic Results",
           "subtitle": "Stable business contract for registered applications.",
           "productId": "results",
-          "primaryLabel": "Choose REST API"
+          "primaryLabel": "Use selected delivery"
         },
         {
           "kind": "api",
@@ -403,14 +403,15 @@ export const experienceFlows = {
           "title": "Provisioning Results subscription",
           "subtitle": "Demonstration of governed provisioning; no production access is granted.",
           "tasks": [
-            ["Purpose recorded","Academic Results analysis"],
-            ["Entitlements reviewed","Student Results + Student Identity"],
-            ["Workspace prepared","Approved fields and governed keys"],
-            ["Ready for use","Sandbox and audit enabled"]
+            ["Application purpose recorded","Daily Academic Results for an approved non-AWS application"],
+            ["Workload identity and entitlement","Registered service identity and minimum approved fields"],
+            ["Approval and sandbox","Owner approval coordinated; synthetic test environment ready"],
+            ["Production subscription prepared","Daily delivery, freshness monitoring and audit enabled"]
           ],
           "summary": [
-            ["Products","2"],
-            ["Audit","On"]
+            ["Data product","Academic Results v1.2"],
+            ["Delivery","REST API"],
+            ["Environment","Non-AWS application"]
           ],
           "primaryLabel": "Open integration console"
         },
@@ -570,7 +571,7 @@ export const experienceFlows = {
         {
           "kind": "controlled",
           "title": "Your approved controlled subset",
-          "subtitle": "Synthetic aggregate result within MOE boundaries; descriptive association only.",
+          "subtitle": "Approved, controlled subset · project-scoped identifiers and results bands only",
           "metrics": [
             ["Participant change","+4 pp"],
             ["Comparison cohort","+1 pp"],
@@ -585,24 +586,14 @@ export const experienceFlows = {
             ["Export","Raw records disabled"],
             ["Audit","Every interaction logged"]
           ],
-          "academic": true
+          "academic": true,
+          "subset": true
         }
       ]
     },
     "7": {
       "entryLabel": "Start from an approved project",
       "screens": [
-        {
-          "kind": "projects",
-          "title": "Partner projects",
-          "subtitle": "Approved MOE data-sharing workspaces.",
-          "projects": [
-            ["Student Support Programme","Active project","Monthly programme evaluation workspace.","45 days to review"],
-            ["Research collaboration","Pending","Awaiting MOE purpose approval.","Pending"],
-            ["Example Programme Partner","Organisation","Verified organisation profile.","Verified"]
-          ],
-          "primaryLabel": "Open Student Support Programme"
-        },
         {
           "kind": "intent",
           "title": "What does your approved project need?",
@@ -621,15 +612,16 @@ export const experienceFlows = {
             ["Workspace","MOE controlled environment","Sponsor, purpose and expiry stay attached","Ready"]
           ],
           "checks": [
-            ["Scope","Authorised HQ"],
-            ["Delayed submissions","2 excluded"]
+            ["Purpose","Approved programme evaluation"],
+            ["Sponsor","MOE programme owner"],
+            ["Access","180 days; no raw marks"]
           ],
           "primaryLabel": "Open secure workspace"
         },
         {
           "kind": "controlled",
-          "title": "Approved programme comparison",
-          "subtitle": "Synthetic aggregate result within MOE boundaries; descriptive association only.",
+          "title": "Your prepared project package",
+          "subtitle": "Recommended indicators and synthetic sample · secure workspace",
           "metrics": [
             ["Participant change","+4 pp"],
             ["Comparison cohort","+1 pp"],
@@ -644,7 +636,8 @@ export const experienceFlows = {
             ["Export","Raw records disabled"],
             ["Audit","Every interaction logged"]
           ],
-          "academic": true
+          "academic": true,
+          "subset": true
         }
       ]
     },
@@ -674,8 +667,9 @@ export const experienceFlows = {
             ["Audit","Every interaction logged","Enforced for this approved project","Governed"]
           ],
           "checks": [
-            ["Scope","Authorised HQ"],
-            ["Delayed submissions","2 excluded"]
+            ["Purpose","Approved programme evaluation"],
+            ["Sponsor","MOE programme owner"],
+            ["Access","180 days; no raw marks"]
           ],
           "primaryLabel": "Open controlled comparison"
         },
@@ -738,26 +732,18 @@ export const experienceFlows = {
 export const personaMeta = {
   "analyst": {
     "label": "Analyst",
-    "role": "HQ Analyst",
-    "nav": ["Home","Data products","Analytics","Workspace","Data requests"],
-    "search": "Search data, notebooks, dashboards and more…"
+    "role": "HQ Analyst"
   },
   "business": {
     "label": "Business",
-    "role": "Business Officer",
-    "nav": ["Home","Insights","Dashboards","Ask Edu Hub","Saved views"],
-    "search": "Search dashboards, insights and business terms…"
+    "role": "Business Officer"
   },
   "system": {
     "label": "System",
-    "role": "Application Developer",
-    "nav": ["Home","Data products","Developer","Consumers","Subscriptions"],
-    "search": "Search contracts, APIs, consumers and subscriptions…"
+    "role": "Application Developer"
   },
   "partner": {
     "label": "External partner",
-    "role": "External Partner",
-    "nav": ["Home","Projects","Secure workspace","Agreements","Support"],
-    "search": "Search approved projects and workspaces…"
+    "role": "External Partner"
   }
 }

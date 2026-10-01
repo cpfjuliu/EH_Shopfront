@@ -1,12 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { experienceFlows, personaMeta } from './experienceFlows.js'
-import { chartData, dataProducts, governanceBackstage, notifications, recentItems, userProfiles } from './mockData.js'
+import { personaMeta } from './experienceFlows.js'
+import { chartData, dataProducts, governanceBackstage, userProfiles } from './mockData.js'
 
 import { Briefing, BusinessAnswer, ContractTests, PartnerOutcome, ResultsDashboard, ResultsEvidence } from './ResultsExperience.jsx'
-import { levelDescriptions, questions, resultsContext, reproducibleSQL } from './resultsModel.js'
+import { resultsContext, reproducibleSQL } from './resultsModel.js'
 
-const stars = [5, 7, 9, 11]
-const personas = ['analyst', 'business', 'system', 'partner']
+import { personas, stars, getExperience, hasCapability, routeHash, parseRoute, createJourney, transition } from './experienceCapabilities.js'
 
 function Icon({ name, size = 16 }) {
   const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }
@@ -75,8 +74,8 @@ function Login({ onLogin }) {
           </div>
           <div className="visual-answer">
             <div className="visual-spark">✦</div>
-            <strong>Ask in business language</strong>
-            <span>Edu Hub can progressively move from data discovery to intent-aware orchestration.</span>
+            <strong>Trust travels with your work</strong>
+            <span>Definitions, quality and permitted use stay attached to each experience.</span>
           </div>
         </div>
       </div>
@@ -85,60 +84,22 @@ function Login({ onLogin }) {
   )
 }
 
-function Sidebar({ persona, activeNav, onNav }) {
-  const nav = personaMeta[persona].nav
-  const iconFor = (label) => {
-    if (/home/i.test(label)) return 'home'
-    if (/data|contract/i.test(label)) return 'data'
-    if (/analytic|insight|dashboard|ask/i.test(label)) return 'chart'
-    if (/workspace|project/i.test(label)) return 'folder'
-    if (/developer|consumer|subscription/i.test(label)) return 'code'
-    if (/agreement|support|request/i.test(label)) return 'file'
-    return 'file'
-  }
-  return (
-    <aside className="sidebar">
-      <div className="nav-group">
-        {nav.map((item) => (
-          <button key={item} aria-label={item} title={item} className={`nav-item ${activeNav === item ? 'active' : ''}`} onClick={() => onNav(item)}>
-            <span className="nav-icon"><Icon name={iconFor(item)} /></span><span>{item}</span>
-          </button>
-        ))}
-      </div>
-      <div className="sidebar-bottom">
-        <div className="nav-caption">PLATFORM</div>
-        <button className={`nav-item ${activeNav === 'Governance' ? 'active' : ''}`} onClick={() => onNav('Governance')}><span className="nav-icon"><Icon name="shield"/></span><span>Governance</span></button>
-        <button className="nav-item"><span className="nav-icon"><Icon name="help"/></span><span>Help & support</span></button>
-      </div>
-    </aside>
-  )
+function Sidebar({ config, route, onNavigate }) {
+  return <aside className="sidebar"><nav className="nav-group" aria-label="Experience navigation">
+    {config.navigation.map(item=><button key={item.route} aria-label={item.label} title={item.label} className={`nav-item ${route===item.route?'active':''}`} onClick={()=>onNavigate(item.route)}><span className="nav-icon"><Icon name={item.icon}/></span><span>{item.label}</span></button>)}
+  </nav><div className="sidebar-bottom"><button className="nav-item" aria-label="Help & scope" title="Help & scope" onClick={()=>onNavigate('help')}><span className="nav-icon"><Icon name="help"/></span><span>Help & scope</span></button></div></aside>
 }
 
-function Topbar({ persona, star, onSearch, onLogout }) {
-  const profile = userProfiles[persona]
-  const [open,setOpen] = useState(false)
-  const items = (notifications[persona] || []).filter(item => star === 11 || item[0] !== 'Briefing')
-  return (
-    <header className="topbar">
-      <div className="brand"><div className="brand-mark">EH</div><span>Edu Hub</span></div>
-      <button className="global-search" onClick={onSearch}><Icon name="search"/><span>{personaMeta[persona].search}</span><kbd>⌘ K</kbd></button>
-      <div className="top-actions">
-        <button className="icon-button" aria-label="Help"><Icon name="help"/></button>
-        <div className="notification-wrap">
-          <button className="icon-button notification-button" aria-label="Notifications" onClick={() => setOpen(v => !v)}><Icon name="bell"/><span className="notification-dot">{items.length}</span></button>
-          {open && <div className="notification-panel">
-            <div className="notification-head"><strong>Notifications</strong><span>{items.length} items</span></div>
-            {items.map(([type,title,copy,tone],i) => <button className="notification-item" key={i} onClick={() => setOpen(false)}>
-              <span className={`notification-icon ${tone || 'neutral'}`}>{type === 'Data quality' ? '!' : type === 'Version' || type === 'Change' ? '↻' : '✓'}</span>
-              <span><strong>{title}</strong><small>{copy}</small></span>
-            </button>)}
-          </div>}
-        </div>
-        <div className="profile-block"><div className="avatar">{profile.initials}</div><div className="profile-copy"><strong>{profile.name}</strong><span>{profile.role}</span></div></div>
-        <button className="icon-button" aria-label="Sign out" onClick={onLogout}><Icon name="logout"/></button>
-      </div>
-    </header>
-  )
+function Topbar({ config, onSearch, onNavigate, onLogout }) {
+  const profile=userProfiles[config.persona]
+  const [open,setOpen]=useState(false)
+  return <header className="topbar"><div className="brand"><div className="brand-mark">EH</div><span>Edu Hub</span></div>
+    <button className="global-search" aria-label="Search this experience" onClick={onSearch}><Icon name="search"/><span>{config.searchPlaceholder}</span><kbd>Ctrl K</kbd></button>
+    <div className="top-actions"><button className="icon-button" aria-label="Help" onClick={()=>onNavigate('help')}><Icon name="help"/></button>
+      <div className="notification-wrap"><button className="icon-button notification-button" aria-label="Notifications" aria-expanded={open} onClick={()=>setOpen(v=>!v)}><Icon name="bell"/><span className="notification-dot">{config.notifications.length}</span></button>
+      {open && <div className="notification-panel"><div className="notification-head"><strong>Notifications</strong></div>{config.notifications.map(item=><button className="notification-item" key={item.title} onClick={()=>{setOpen(false);onNavigate(item.route)}}><span className="notification-icon warning">!</span><span><strong>{item.title}</strong><small>{item.copy}</small></span></button>)}</div>}</div>
+      <div className="profile-block"><div className="avatar">{profile.initials}</div><div className="profile-copy"><strong>{profile.name}</strong><span>{profile.role}</span></div></div><button className="icon-button" aria-label="Sign out" onClick={onLogout}><Icon name="logout"/></button>
+    </div></header>
 }
 
 function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBackstage }) {
@@ -160,20 +121,11 @@ function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBacksta
   )
 }
 
-function SearchOverlay({ persona, onClose, onPick }) {
-  const [query, setQuery] = useState('')
-  const all = [
-    ['Data product', 'Student Academic Results', 'Final results by subject, level, school and year', 'Data products'],
-    ['Data product', 'Student Identity', 'Core student identity and enrolment context', 'Data products'],
-    ['Dashboard', 'Student Academic Results', 'Subject pass rates and year-on-year changes', persona === 'business' ? 'Dashboards' : 'Analytics'],
-    ['Metric', 'Subject pass rate v1', 'Students meeting the subject pass standard · governed definition', persona === 'system' ? 'Data products' : 'Analytics'],
-    ['Workspace', 'Academic Results analysis', 'Recent analysis workspace', persona === 'partner' ? 'Secure workspace' : 'Workspace'],
-  ]
-  const results = all.filter(x => x.join(' ').toLowerCase().includes(query.toLowerCase()))
-  return <div className="overlay" onMouseDown={onClose}><div className="search-dialog" onMouseDown={e => e.stopPropagation()}>
-    <div className="search-dialog-input"><Icon name="search"/><input autoFocus value={query} onChange={e => setQuery(e.target.value)} placeholder={personaMeta[persona].search}/><button onClick={onClose}><Icon name="close"/></button></div>
-    <div className="search-results">{results.map((r,i) => <button key={i} onClick={() => { onPick(r[3]); onClose() }}><div><Badge>{r[0]}</Badge><strong>{r[1]}</strong><span>{r[2]}</span></div><Icon name="chevron"/></button>)}</div>
-  </div></div>
+function SearchOverlay({ config, onClose, onPick }) {
+  const [query,setQuery]=useState('')
+  const results=config.search.filter(item=>(item.label+' '+item.description).toLowerCase().includes(query.toLowerCase()))
+  useEffect(()=>{const close=e=>{if(e.key==='Escape')onClose()};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[onClose])
+  return <div className="overlay" onMouseDown={onClose}><div className="search-dialog" role="dialog" aria-modal="true" aria-label="Search this experience" onMouseDown={e=>e.stopPropagation()}><div className="search-dialog-input"><Icon name="search"/><input aria-label="Search this experience" autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder={config.searchPlaceholder}/><button aria-label="Close search" onClick={onClose}><Icon name="close"/></button></div><div className="search-results">{results.map(item=><button key={item.route} onClick={()=>{onPick(item.route);onClose()}}><div><strong>{item.label}</strong><span>{item.description}</span></div><Icon name="chevron"/></button>)}{!results.length && <p className="search-empty">No matches in this experience. Try Results, evidence or your current activity.</p>}</div></div></div>
 }
 
 function PageHeader({ title, subtitle, breadcrumbs = [], actions }) {
@@ -198,59 +150,25 @@ function ActionRow({ screen, onNext, onBack, atEnd, loading }) {
   </div>
 }
 
-function HomeContext({ persona, star, onStart }) {
-  const flow = experienceFlows[persona][star]
-  const profile = userProfiles[persona]
-  const items = recentItems[persona].filter(item => star === 11 || item[0] !== 'Briefing')
-  const notice = (notifications[persona] || []).find(item => star === 11 || item[0] !== 'Briefing')
-  const intro = {
-    analyst: ['Analyse with trusted data', 'Start with trusted data or describe the analysis you are trying to perform. Your workspaces, approvals and definitions stay with you.'],
-    business: ['Get to the answer', 'Use trusted dashboards, briefings and governed business questions without navigating technical datasets.'],
-    system: ['Build against dependable data products', 'Discover contracts, manage subscriptions and integrate applications without depending on internal storage details.'],
-    partner: ['Work within your approved purpose', 'Access approved projects and secure workspaces with controls that follow the data interaction.'],
-  }[persona]
-  const continuity = {
-    analyst: [['Pending access','2'],['Saved analyses','5'],['Active workspaces','3']],
-    business: [['Followed views','6'],['Saved questions','4'],['Briefings','2']],
-    system: [['Subscriptions','4'],['Production consumers','3'],['Upcoming changes','1']],
-    partner: [['Active projects','1'],['Reviews due','1'],['Days to expiry','164']],
-  }[persona]
-  return <div className="home-content">
-    <PageHeader title={`Good evening, ${profile.name.split(' ')[0]}`} subtitle={profile.context} />
-    <section className="home-hero">
-      <div><div className="eyebrow">{personaMeta[persona].role}</div><h2>{intro[0]}</h2><p>{levelDescriptions[star][1]}</p></div>
-      <Button kind="primary" onClick={onStart} icon="spark">{flow.entryLabel}</Button>
-    </section>
-    {notice && <div className={`attention-banner ${notice[3] || 'neutral'}`}><div className="attention-icon">{notice[3]==='warning'?'!':'✓'}</div><div><strong>{notice[1]}</strong><span>{notice[2]}</span></div><Button onClick={onStart}>View</Button></div>}
-    <div className="home-section-title">Recently used</div>
-    <div className="recent-grid">{items.map(([type,name,status]) => <button className="recent-card" key={name} onClick={onStart}><div className="recent-type">{type}</div><strong>{name}</strong><span>{status}</span></button>)}</div>
-    <div className="home-grid home-grid-3">
-      <div className="home-panel"><div className="panel-title">My Edu Hub</div>{continuity.map(([label,value])=><div className="activity-row" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
-      <div className="home-panel"><div className="panel-title">Platform status</div><div className="status-line"><span className="status-dot ok"/>Certified data products operating normally</div><div className="status-line"><span className="status-dot warn"/>2 Results submissions delayed</div><div className="status-line"><span className="status-dot ok"/>Access services operating normally</div></div>
-      <div className="home-panel"><div className="panel-title">Trust by default</div><div className="status-line"><Icon name="shield" size={13}/><span>Definitions, lineage and quality stay attached to use</span></div><div className="status-line"><Icon name="refresh" size={13}/><span>Changes are versioned and consumer impact checked</span></div><div className="status-line"><Icon name="check" size={13}/><span>Purpose and permissions are applied throughout</span></div></div>
-    </div>
-  </div>
-}
-
-function CatalogScreen({ screen, onNext }) {
+function CatalogScreen({ screen, onNext, onNavigate }) {
   const [query, setQuery] = useState(screen.search || '')
   const products = screen.productIds.map(id => dataProducts[id]).filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.description.toLowerCase().includes(query.toLowerCase()))
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Catalog']} />
     <div className="catalog-layout">
-      <aside className="catalog-tree"><div className="catalog-filter"><Icon name="search"/><input placeholder="Filter"/></div><button className="tree-item active">Student</button><button className="tree-item">School</button><button className="tree-item">Staff</button><button className="tree-item">Finance</button></aside>
-      <div className="catalog-main"><div className="catalog-toolbar"><div className="search-field"><Icon name="search"/><input value={query} onChange={e => setQuery(e.target.value)}/></div><Badge tone="neutral">{products.length} results</Badge></div>
-      <div className="data-table"><div className="table-row table-head"><span>Name</span><span>Type</span><span>Owner</span><span>Freshness</span><span>Trust</span></div>{products.map((p,i) => <button className="table-row" key={p.id} onClick={i === 0 ? onNext : undefined}><span className="linkish">{p.name}</span><span>{p.type}</span><span>{p.owner}</span><span>{p.freshness}</span><span><Badge>{p.trust}</Badge></span></button>)}</div></div>
+      <aside className="catalog-tree"><div className="tree-item active">Student data products</div><p className="body-copy">Certified products and reference context</p></aside>
+      <div className="catalog-main"><div className="catalog-toolbar"><div className="search-field"><Icon name="search"/><input aria-label="Search data products" value={query} onChange={e => setQuery(e.target.value)}/></div><Badge tone="neutral">{products.length} results</Badge></div>
+      <div className="data-table"><div className="table-row table-head"><span>Name</span><span>Type</span><span>Owner</span><span>Freshness</span><span>Trust</span></div>{products.map(p => <button className="table-row" key={p.id} onClick={()=>p.id==='results'?onNext():onNavigate(`product-${p.id}`)}><span className="linkish">{p.name}</span><span>{p.type}</span><span>{p.owner}</span><span>{p.freshness}</span><span><Badge>{p.trust}</Badge></span></button>)}</div>{!products.length && <p className="body-copy">No products match your search.</p>}</div>
     </div>
     <ActionRow screen={screen} onNext={onNext}/>
   </div>
 }
 
-function AssetScreen({ screen, onNext, onBack }) {
+function AssetScreen({ screen, onNext, onBack, config }) {
   const p = dataProducts[screen.productId]
   const [tab,setTab] = useState('Overview')
   const [sampleSQL,setSampleSQL] = useState(false)
   const tabs = ['Overview','Schema','Delivery','Versions','Consumers','Lineage','Quality','Access']
-  return <div className="page-content"><PageHeader title={p.name} subtitle={p.description} breadcrumbs={['Catalog','Student',p.name]} actions={<><Button onClick={()=>setSampleSQL(v=>!v)}>{sampleSQL ? 'Hide sample SQL' : screen.secondaryLabel || 'Open in SQL'}</Button><Button kind="primary" onClick={onNext}>{screen.primaryLabel || 'Request access'}</Button></>} />
+  return <div className="page-content"><PageHeader title={p.name} subtitle={p.description} breadcrumbs={['Catalog','Student',p.name]} actions={<>{hasCapability(config,'sampleSql') && p.id==='results' && <Button onClick={()=>setSampleSQL(v=>!v)}>{sampleSQL ? 'Hide sample SQL' : 'View sample SQL'}</Button>}{!screen.readOnly && <Button kind="primary" onClick={onNext}>{screen.primaryLabel || 'Request access'}</Button>}</>} />
     <div className="badge-row"><Badge tone="purple">{p.type}</Badge><Badge>{p.lifecycle}</Badge><Badge>{p.version}</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge></div>
     <div className="trust-banner"><div className="trust-icon"><Icon name="shield" size={18}/></div><div><strong>Trusted product</strong><span>Authoritative: {p.authoritative} · Last validated {p.lastValidated} · Changes are versioned and assessed against registered consumers.</span></div><Badge tone="success">Certified</Badge></div>
     <div className="meta-grid"><Meta label="Owner" value={p.owner}/><Meta label="Freshness" value={p.freshness}/><Meta label="Coverage" value={p.coverage}/><Meta label="Quality" value={p.quality}/></div>
@@ -278,8 +196,6 @@ function ProductTabContent({ p, tab }) {
 
 function Meta({label,value}) { return <div className="meta-card"><span>{label}</span><strong>{value}</strong></div> }
 function Info({label,value}) { return <div className="info-block"><span>{label}</span><p>{value}</p></div> }
-function EmptyTab({name}) { return <div className="empty-tab"><Icon name="data" size={22}/><strong>{name}</strong><span>This prototype keeps the focus on the core journey. The production surface would expose the corresponding governed detail here.</span></div> }
-
 function FormScreen({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Requests','New']} />
     <div className="form-card">{screen.fields.map(([label,value],i) => <label className="form-field" key={label}><span>{label}</span>{i === 1 || value.length > 50 ? <textarea defaultValue={value}/> : <input defaultValue={value}/>}<small>{i===0 ? 'Use a clear purpose so policy and approvers can be determined.' : ''}</small></label>)}</div>
@@ -298,11 +214,9 @@ function IntentScreen({ screen, onNext, onBack, loading, onQuestion }) {
   </div>
 }
 
-function PlanScreen({ screen, onNext, onBack, analysisLevel, onAnalysisLevel }) {
-  const hasFrequent = JSON.stringify(screen.rows).toLowerCase().includes('frequent absence')
+function PlanScreen({ screen, onNext, onBack, config, analysisLevel, onAnalysisLevel }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub',screen.title]} />
-    {hasFrequent && <div className="definition-callout"><div><strong>Subject pass rate</strong><span>{resultsContext.definition}</span></div><Button>Definition details</Button></div>}
-    {screen.editable && <label className="form-field">Override analysis level<select value={analysisLevel} onChange={e=>onAnalysisLevel(e.target.value)}><option>All levels</option><option>Secondary 1</option><option>Secondary 2</option></select><small>Your selection is carried into the generated SQL. Review cohort changes before attributing causes.</small></label>}
+    {screen.editable && hasCapability(config,'methodOverride') && <label className="form-field">Override analysis level<select value={analysisLevel} onChange={e=>onAnalysisLevel(e.target.value)}><option>All levels</option><option>Secondary 1</option><option>Secondary 2</option></select><small>Your selection is carried into the generated SQL. Review cohort changes before attributing causes.</small></label>}
     <div className="plan-layout"><div className="plan-table">{screen.rows.map(([label,value,note,status]) => <div className="plan-row" key={label+value}><div className="plan-label">{label}</div><div><strong>{value}</strong><span>{note}</span></div><Badge>{status}</Badge></div>)}</div>
     <aside className="summary-panel"><h3>Review</h3>{screen.checks?.map(([label,value]) => <div className="summary-line" key={label}><span>{label}</span><Badge>{value}</Badge></div>)}</aside></div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
@@ -323,19 +237,19 @@ function ProgressScreen({ screen, onNext, onBack, loading }) {
   </div>
 }
 
-function WorkspaceScreen({ screen, onBack, analysisLevel = 'All levels' }) {
+function WorkspaceScreen({ screen, onBack, config, analysisLevel = 'All levels' }) {
   const generated = analysisLevel === 'All levels' ? screen.code : screen.code.replace("AND result_status = 'FINAL'", "AND result_status = 'FINAL'\n    AND level = '" + analysisLevel + "'")
   const [code,setCode] = useState(generated)
-  const [run,setRun] = useState(!screen.manual)
+  const [run,setRun] = useState(false)
   const [message,setMessage] = useState('')
   const [detail,setDetail] = useState(null)
   const execute = () => { setRun(code === generated && !screen.manual); setMessage(code === generated && !screen.manual ? 'Synthetic preview refreshed. No database query was executed.' : 'SQL saved for review. This prototype has no SQL execution backend; edited queries cannot produce new results.') }
 
   return <div className="page-content workspace-page"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Workspace',screen.title]} actions={<><Button>Share</Button><Button kind="primary" onClick={execute}>Run all</Button></>} />
-    <TransparencyControls mode="analysis" />
-    <div className="editor-shell"><aside className="editor-left"><div className="editor-panel-head">Analysis assets <span>＋</span></div><button className="editor-file active">01_analysis.sql</button><button className="editor-file">02_breakdown.sql</button><button className="editor-file" onClick={()=>setDetail(detail==='definition'?null:'definition')}>Definitions</button><button className="editor-file" onClick={()=>setDetail(detail==='lineage'?null:'lineage')}>Lineage</button></aside>
+    <ResultsEvidence compact/>
+    <div className="editor-shell"><aside className="editor-left"><div className="editor-panel-head">Analysis assets <span>＋</span></div><span className="editor-file active">01_analysis.sql</span><button className="editor-file" onClick={()=>setDetail(detail==='definition'?null:'definition')}>Definitions</button><button className="editor-file" onClick={()=>setDetail(detail==='lineage'?null:'lineage')}>Lineage</button></aside>
     <main className="editor-main">{detail && <div className="panel-card"><h3>{detail==='definition'?'Metric and assumptions':'Results lineage'}</h3><p>{detail==='definition'?resultsContext.definition+' '+resultsContext.methodology:'School Results System → finality, subject-code and duplicate validation → Student Academic Results v1.2 → authorised HQ workspace. Student Identity v1.8 supplies governed school and level context. Two delayed submissions are excluded.'}</p></div>}<div className="editor-toolbar"><Button kind="primary" onClick={execute}>Run</Button>{screen.badges?.map(b => <Badge key={b}>{b}</Badge>)}<span className="saved-state">Saved just now</span></div><label className="sql-label">Review and edit SQL<textarea className="code-editor sql-editor" value={code} onChange={e=>{setCode(e.target.value);setRun(false)}}/></label>{message && <p role="status">{message}</p>}<div className="editor-results">{!run ? <div className="result-placeholder">Write or review SQL, then select Run. Execution is simulated.</div> : analysisLevel !== 'All levels' ? <div className="result-placeholder">SQL scoped to {analysisLevel}. Review and execute in an approved workspace; no scoped result fixture is supplied.</div> : screen.chart ? <BarChart name={screen.chart}/> : screen.resultRows ? <SimpleTable columns={screen.resultColumns} rows={screen.resultRows}/> : <div className="result-placeholder">Run the analysis to refresh results.</div>}</div></main>
-    <aside className="assistant-panel"><div className="editor-panel-head">Genie Code</div><div className="assistant-message">{screen.assistant}</div><div className="assistant-message user">Explain the assumptions behind this analysis.</div><div className="assistant-input">Ask about this analysis…</div></aside></div>
+    {hasCapability(config,'starterSql') && <aside className="assistant-panel"><div className="editor-panel-head">Analysis notes</div><div className="assistant-message">{screen.assistant}</div><div className="assistant-input">Review the method, definitions and lineage before use.</div></aside>}</div>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
 }
@@ -344,7 +258,7 @@ function DiscoverScreen({ screen, onNext, onBack }) {
   const [q,setQ] = useState(screen.search)
   const items = screen.items.filter(x => x.join(' ').toLowerCase().includes(q.toLowerCase()))
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Analytics']} />
-    <div className="wide-search"><Icon name="search"/><input value={q} onChange={e=>setQ(e.target.value)}/></div>
+    <div className="wide-search"><Icon name="search"/><input aria-label="Search dashboards" value={q} onChange={e=>setQ(e.target.value)}/></div>
     <h3 className="section-title">Results</h3><div className="asset-card-grid">{items.map((item,i) => <button className="asset-card" key={item[1]} onClick={i===0?onNext:undefined}><div className="asset-type">{item[0]}</div><strong>{item[1]}</strong><p>{item[2]}</p><Badge>{item[3]}</Badge></button>)}</div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
@@ -363,30 +277,9 @@ function DashboardDetail({ screen, onNext, onBack }) {
 
 function Metric({label,value}) { return <div className="metric-card"><span>{label}</span><strong>{value}</strong></div> }
 
-function DashboardScreen({ screen, onBack }) {
-  const mentionsFrequent = JSON.stringify(screen).toLowerCase().includes('frequent absence')
-  return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Analytics',screen.title]} actions={<><Button>Export</Button><Button>Share</Button></>} />
-    {mentionsFrequent && <div className="definition-callout"><div><strong>What “frequent absence” means here</strong><span>{resultsContext.definition}</span></div><Button>View definition</Button></div>}
-    <div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>
-    <div className="dashboard-layout"><div className="chart-card"><h3>Trend</h3><BarChart name={screen.chart}/></div><div className="table-card"><h3>Highlights</h3><SimpleTable columns={['Item','Change']} rows={screen.table}/></div></div>
-    <ActionRow screen={{}} onBack={onBack}/>
-  </div>
-}
-
 function RecommendationsScreen({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub','Recommendations']} />
     <div className="asset-card-grid">{screen.items.map((item,i)=><button className={`asset-card ${i===0?'recommended':''}`} key={item[1]} onClick={i===0?onNext:undefined}><div className="asset-type">{item[0]}</div><strong>{item[1]}</strong><p>{item[2]}</p><Badge>{item[3]}</Badge></button>)}</div>
-    <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
-  </div>
-}
-
-function TransparencyControls() { return <ResultsEvidence/> }
-
-function AnswerScreen({ screen, onNext, onBack }) {
-  return <div className="page-content"><PageHeader title={screen.title} breadcrumbs={['Edu Hub',screen.title]} />
-    <TransparencyControls mode="answer" />
-    <div className="answer-layout"><main className="answer-card"><h2>{screen.headline}</h2><p>{screen.body}</p><div className="metric-grid metric-grid-3">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>{screen.chart && <BarChart name={screen.chart}/>}</main>
-    <aside className="evidence-panel"><h3>Evidence & context</h3>{screen.evidence.map(([l,v]) => <div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
 }
@@ -404,7 +297,7 @@ function ApiScreen({ screen, onNext, onBack }) {
     <div className="api-layout"><pre className="dev-code">{screen.code}</pre><aside className="summary-panel"><h3>Interface</h3>{screen.facts.map(([l,v])=><div className="summary-line" key={l}><span>{l}</span><Badge>{v}</Badge></div>)}</aside></div><ActionRow screen={screen} onNext={onNext} onBack={onBack}/></div>
 }
 
-function ContractScreen({ screen, onNext, onBack }) {
+function ContractScreen({ screen, onNext, onBack, config, delivery, onDelivery }) {
   const p = dataProducts[screen.productId]
   const [tab,setTab] = useState('Contract')
   const tabs = ['Contract','Schema','Delivery','Versions','Consumers']
@@ -413,26 +306,17 @@ function ContractScreen({ screen, onNext, onBack }) {
     <div className="meta-grid"><Meta label="Freshness" value={p.freshness}/><Meta label="SLO" value="99.5% delivery"/><Meta label="Owner" value={p.owner}/><Meta label="Compatibility" value="Backward compatible within major version"/></div>
     <div className="tabs scroll-tabs">{tabs.map(t=><button key={t} className={tab===t?'active':''} onClick={()=>setTab(t)}>{t}</button>)}</div>
     {tab === 'Contract' ? <div className="contract-overview"><div className="panel-card"><h3>Business contract</h3><div className="contract-key"><span>Product</span><strong>{p.name} {p.version}</strong></div><div className="contract-key"><span>Promise</span><strong>Stable academic results semantics independent of storage or platform implementation</strong></div><div className="contract-key"><span>Change policy</span><strong>Breaking changes require a new major version and consumer impact review</strong></div><div className="contract-key"><span>Freshness</span><strong>{p.freshness}</strong></div></div><aside className="summary-panel"><h3>Contract health</h3><div className="summary-line"><span>Registered consumers</span><strong>{p.consumers.length}</strong></div><div className="summary-line"><span>Latest quality</span><Badge>{p.quality}</Badge></div><div className="summary-line"><span>Last validated</span><strong>{p.lastValidated}</strong></div><div className="summary-line"><span>Lifecycle</span><Badge>{p.lifecycle}</Badge></div></aside></div> : <ProductTabContent p={p} tab={tab}/>}
+    {hasCapability(config,'manualDelivery') && <label className="form-field">Select delivery<select aria-label="Select delivery" value={delivery} onChange={e=>onDelivery(e.target.value)}><option>REST API</option><option>Direct query</option><option>Managed file</option></select><small>You choose the delivery route for your integration.</small></label>}
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
-}
-
-function ProjectsScreen({ screen, onNext, onBack }) {
-  return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Partner access']} actions={<Button kind="primary" icon="plus">New project</Button>} />
-    <div className="asset-card-grid">{screen.projects.map((p,i)=><button className="asset-card" key={p[0]} onClick={i===0?onNext:undefined}><div className="asset-type">{p[1]}</div><strong>{p[0]}</strong><p>{p[2]}</p><Badge>{p[3]}</Badge></button>)}</div><ActionRow screen={screen} onNext={onNext} onBack={onBack}/></div>
 }
 
 function ControlledScreen({ screen, onBack }) {
   const [entitlement,setEntitlement] = useState('Active')
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Partner access',screen.title]} />
     <details className="panel-card"><summary>Prototype access scenarios</summary><label className="form-field">Entitlement<select aria-label="Entitlement" value={entitlement} onChange={e=>setEntitlement(e.target.value)}><option>Active</option><option>Expired</option><option>Denied</option></select></label></details>
-    {entitlement === 'Active' ? <><div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>
-    <div className="dashboard-layout"><div className="chart-card"><h3>Approved analysis</h3><p>Participant pass-rate change: +4 pp. Comparison cohort: +1 pp. Aggregate synthetic comparison; causal impact is not established.</p></div><aside className="evidence-panel"><h3>Workspace controls</h3>{screen.controls.map(([l,v])=><div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div></> : <div className="incident-banner" role="status"><strong>Access {entitlement.toLowerCase()}</strong><p>Results are unavailable. Your MOE sponsor must confirm the approved purpose and renew or approve entitlement before access resumes. No raw data or cached result is released.</p></div>}<ActionRow screen={{}} onBack={onBack}/></div>
-}
-
-function ConversationScreen({ screen, onBack }) {
-  return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Briefings',screen.title]} />
-    <div className="conversation-layout"><div className="conversation-card">{screen.messages.map(([who,msg],i)=><div key={i} className={`chat-message ${who}`}><div className="chat-avatar">{who==='user'?'JC':'✦'}</div><div>{msg}</div></div>)}<div className="chat-compose">Ask a follow-up…</div></div><aside className="summary-panel"><h3>Conversation context</h3>{screen.context.map(([l,v])=><div className="summary-line" key={l}><span>{l}</span><strong>{v}</strong></div>)}</aside></div><ActionRow screen={{}} onBack={onBack}/></div>
+    {entitlement === 'Active' ? <>{!screen.subset && <div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>}
+    <div className="dashboard-layout"><div className="chart-card"><h3>{screen.subset?'Approved data package':'Approved analysis'}</h3>{screen.subset?<><p>Project-scoped synthetic sample. Use only within the approved evaluation workspace.</p><SimpleTable columns={['Participant token','Level','Results band']} rows={[['PRJ-001','Secondary 2','Meets standard'],['PRJ-002','Secondary 2','Developing']]}/></>:<p>Participant pass-rate change: +4 pp. Comparison cohort: +1 pp. Aggregate synthetic comparison; causal impact is not established.</p>}</div><aside className="evidence-panel"><h3>Workspace controls</h3>{screen.controls.map(([l,v])=><div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div></> : <div className="incident-banner" role="status"><strong>Access {entitlement.toLowerCase()}</strong><p>Results are unavailable. Your MOE sponsor must confirm the approved purpose and renew or approve entitlement before access resumes. No raw data or cached result is released.</p></div>}<ActionRow screen={{}} onBack={onBack}/></div>
 }
 
 function ConsumerHealth({ screen, onNext, onBack }) {
@@ -449,7 +333,7 @@ function IncidentScreen({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub','Data health']} />
     <div className="incident-banner"><div className="incident-mark">!</div><div><strong>{screen.severity}</strong><p>{screen.summary}</p></div></div>
     <div className="incident-grid"><div className="panel-card"><h3>Affected data</h3><SimpleTable columns={['Feed','Latest state','Treatment']} rows={screen.affected}/></div><aside className="summary-panel"><h3>Safe handling</h3>{screen.handling.map(([l,v])=><div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div>
-    <div className="definition-callout"><div><strong>Why this matters</strong><span>Higher-star experience does not hide failures. It detects them early, makes the impact explicit and offers a safe recovery path.</span></div><Badge tone="warning">Degraded</Badge></div>
+    <div className="definition-callout"><div><strong>Why this matters</strong><span>Delayed source feeds remain visible. Review the affected scope and handling before continuing your analysis.</span></div><Badge tone="warning">Degraded</Badge></div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
 }
@@ -467,128 +351,105 @@ function GovernanceScreen({ onBack }) {
   </div>
 }
 
+function ScopeEvidence({ config, onBack }) {
+  const partner=config.persona==='partner'
+  const product=dataProducts.results
+  const rows=partner ? [['Approved purpose','Academic programme evaluation'],['MOE sponsor','Programme owner'],['Method','Approved aggregate 2025–2026 comparison; no causal claim'],['Disclosure','Raw marks and direct identifiers stay within MOE'],['Expiry','180 days; sponsor renewal required'],['Controls','Pseudonymisation, minimum cohort size 10, query audit and restricted exports']] : [['Authoritative source',product.source],['Owner',product.owner],['Freshness',product.freshness+' · '+product.lastValidated],['Quality',resultsContext.quality],['Sensitivity','Sensitive source records; access is limited to the permitted purpose'],['Definition',resultsContext.definition],['Assumptions',resultsContext.methodology],['Permitted use',config.persona==='business'?'Authorised aggregate business views':config.persona==='system'?'Registered workload identity and contracted fields':'Approved analytical purpose and workspace entitlement']]
+  return <div className="page-content"><PageHeader title={partner?'Purpose, evidence & controls':'Definitions, evidence & quality'} subtitle="Context for your current experience"/><div className="panel-card">{rows.map(([l,v])=><Info key={l} label={l} value={v}/>)}</div><ActionRow screen={{}} onBack={onBack}/></div>
+}
+
+function ExperienceHelp({ config, onBack }) {
+  return <div className="page-content"><PageHeader title="Help & scope" subtitle={personaMeta[config.persona].role}/><div className="panel-card"><h3>{config.navigation[0].label}</h3><p>{config.routes[config.landing].screen.subtitle || 'Inspect the evidence accompanying your approved outcome.'}</p><p>This demonstration uses synthetic data. Permissions, freshness and approved purpose remain attached to your work.</p></div><ActionRow screen={{}} onBack={onBack}/></div>
+}
+
 function renderScreen(screen, props) {
-  const map = {
-    briefing: Briefing,
-    businessAnswer: BusinessAnswer,
-    resultsDashboard: ResultsDashboard,
-    partnerOutcome: PartnerOutcome,
-    contractTests: ContractTests,
-    catalog: CatalogScreen,
-    asset: AssetScreen,
-    form: FormScreen,
-    intent: IntentScreen,
-    plan: PlanScreen,
-    progress: ProgressScreen,
-    workspace: WorkspaceScreen,
-    discover: DiscoverScreen,
-    dashboardDetail: DashboardDetail,
-    dashboard: DashboardScreen,
-    recommendations: RecommendationsScreen,
-    answer: AnswerScreen,
-    table: TableScreen,
-    api: ApiScreen,
-    contract: ContractScreen,
-    projects: ProjectsScreen,
-    controlled: ControlledScreen,
-    conversation: ConversationScreen,
-    consumerHealth: ConsumerHealth,
-    change: ChangeScreen,
-    incident: IncidentScreen,
-    governance: GovernanceScreen,
-  }
-  const Component = map[screen.kind] || TableScreen
+  const map={scopeEvidence:ScopeEvidence,experienceHelp:ExperienceHelp,briefing:Briefing,businessAnswer:BusinessAnswer,resultsDashboard:ResultsDashboard,partnerOutcome:PartnerOutcome,contractTests:ContractTests,catalog:CatalogScreen,asset:AssetScreen,form:FormScreen,intent:IntentScreen,plan:PlanScreen,progress:ProgressScreen,workspace:WorkspaceScreen,discover:DiscoverScreen,dashboardDetail:DashboardDetail,recommendations:RecommendationsScreen,table:TableScreen,api:ApiScreen,contract:ContractScreen,controlled:ControlledScreen,consumerHealth:ConsumerHealth,change:ChangeScreen,incident:IncidentScreen}
+  const Component=map[screen.kind]
+  if(!Component) throw new Error('Unregistered experience screen: '+screen.kind)
   return <Component screen={screen} {...props}/>
 }
 
-function manualScreenFor(persona, label) {
-  if (/governance/i.test(label)) return { kind:'governance', title:'Governance' }
-  if (/home/i.test(label)) return null
-  if (/data product/i.test(label)) return experienceFlows.analyst[5].screens[0]
-  if (/analytics|insights|dashboards/i.test(label)) return experienceFlows.business[5].screens[2]
-  if (/workspace/i.test(label) && persona !== 'partner') return experienceFlows.analyst[7].screens[3]
-  if (/request/i.test(label)) return experienceFlows.analyst[5].screens[2]
-  if (/developer|consumer|subscription/i.test(label)) return experienceFlows.system[5].screens[0]
-  if (/project/i.test(label)) return experienceFlows.partner[7].screens[0]
-  if (/secure workspace/i.test(label)) return experienceFlows.partner[9].screens[2]
-  if (/agreement/i.test(label)) return { kind:'table', title:'Agreements', subtitle:'Data-sharing agreements for your organisation.', columns:['Agreement','Purpose','Status','Expiry'], rows:[['DSA-2041','Programme evaluation','Active','24 Mar 2027'],['DSA-1978','Research collaboration','Pending','—']] }
-  if (/ask edu hub/i.test(label)) return experienceFlows.business[9].screens[0]
-  if (/saved views/i.test(label)) return { kind:'discover', title:'Saved views', subtitle:'Dashboards and insights you have saved.', search:'', items:[['Dashboard','Student Academic Results','Subject pass rates and year-on-year changes.','Trusted'],['Explorer','Academic Results leadership view','Prepared leadership view with governed definitions.','Trusted']] }
-  return { kind:'table', title:label, subtitle:'Prototype module.', columns:['Item','Status'], rows:[['Example item','Available']] }
+function Experience({ config, onLogout, backstage, setBackstage }) {
+  const [state,setState]=useState(()=>createJourney(config))
+  const current=useRef(state)
+  const timer=useRef(null)
+  const sessionId=useRef(crypto.randomUUID())
+  const [loading,setLoading]=useState(false)
+  const [searchOpen,setSearchOpen]=useState(false)
+  const cancelPending=()=>{clearTimeout(timer.current);setLoading(false)}
+  const dispatch=action=>{
+    const previous=current.current
+    const next=transition(config,previous,{scope:config.scope,...action})
+    if(next===previous)return
+    current.current=next;setState(next)
+    if(next.route!==previous.route || action.type==='HISTORY') {
+      const method=next.historyMode==='push'?'pushState':'replaceState'
+      window.history[method]({experience:config.scope,session:sessionId.current},'',routeHash(config,next.route))
+    }
+  }
+  useEffect(()=>{
+    // A fresh scope/session never trusts an old URL or history-state grant.
+    const requested=parseRoute(config,window.location.hash)
+    dispatch({type:'HISTORY',route:requested})
+    const restore=()=>{
+      cancelPending();setSearchOpen(false);setBackstage(false)
+      const foreignSession=window.history.state?.session && window.history.state.session!==sessionId.current
+      dispatch({type:'HISTORY',route:foreignSession?config.landing:parseRoute(config,window.location.hash)})
+    }
+    const keyboard=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setSearchOpen(true)}}
+    window.addEventListener('popstate',restore);window.addEventListener('hashchange',restore);window.addEventListener('keydown',keyboard)
+    return()=>{clearTimeout(timer.current);window.removeEventListener('popstate',restore);window.removeEventListener('hashchange',restore);window.removeEventListener('keydown',keyboard)}
+  },[config])
+  useEffect(()=>{if(backstage){cancelPending();setSearchOpen(false)}},[backstage])
+  const navigate=route=>{cancelPending();setBackstage(false);dispatch({type:'NAVIGATE',route})}
+  const next=()=>{
+    if(loading)return
+    const source=current.current.route
+    const kind=config.routes[source].screen.kind
+    if(['intent','progress'].includes(kind)) {
+      setLoading(true)
+      timer.current=setTimeout(()=>{setLoading(false);dispatch({type:'NEXT',source})},650)
+    } else dispatch({type:'NEXT',source})
+  }
+  const back=()=>{cancelPending();dispatch({type:'BACK'})}
+  let screen=config.routes[state.route].screen
+  if(hasCapability(config,'manualDelivery') && screen.kind==='api' && state.delivery!=='REST API') screen={...screen,title:state.delivery+' integration',code:state.delivery==='Direct query'?'-- Use your approved workload identity in the authorised query environment.\nSELECT student_id, subject, academic_year, passed\nFROM edu_hub.student_academic_results\nWHERE academic_year = 2026;':'Secure managed file delivery\nSchedule: daily at 6:15 PM\nFormat: approved fields only; manifest includes freshness status\nIdentity: registered application\nExpired entitlement: delivery stopped',facts:[['Delivery',state.delivery],['Freshness','Daily'],['Entitlement','Registered application only'],['Data','Contracted minimum fields']]}
+  if(hasCapability(config,'manualDelivery') && screen.kind==='form') screen={...screen,fields:screen.fields.map(([label,value])=>[label,label==='Delivery'?state.delivery:value])}
+  const props={config,onNavigate:navigate,onNext:next,onBack:back,loading,question:state.question,onQuestion:value=>dispatch({type:'QUESTION',source:state.route,value}),analysisLevel:state.analysisLevel,onAnalysisLevel:value=>dispatch({type:'LEVEL',source:state.route,value}),delivery:state.delivery,onDelivery:value=>dispatch({type:'DELIVERY',source:state.route,value})}
+  return <div className="app-shell" data-experience={config.scope} data-route={state.route}>
+    <Topbar config={config} onSearch={()=>setSearchOpen(true)} onNavigate={navigate} onLogout={onLogout}/>
+    <Sidebar config={config} route={state.route} onNavigate={navigate}/>
+    <main className="main-area">
+      {backstage ? <GovernanceScreen onBack={()=>setBackstage(false)}/> : <>
+        <React.Fragment key={state.route}>{renderScreen(screen,props)}</React.Fragment>
+        <nav className="context-actions" aria-label="Supporting context">{config.actions.filter(action=>action.route!==state.route).map(action=><button key={action.id} onClick={()=>navigate(action.route)}>{action.label}</button>)}</nav>
+        {state.route===config.landing && config.home.cards.length>0 && <section className="experience-recents" aria-label="Recently used">{config.home.cards.map(card=><button className="recent-card" key={card.route} onClick={()=>navigate(card.route)}><span>Recently used</span><strong>{card.label}</strong></button>)}</section>}
+      </>}
+    </main>
+    {searchOpen && <SearchOverlay config={config} onClose={()=>setSearchOpen(false)} onPick={navigate}/>}
+  </div>
 }
 
 function App() {
-  const [loggedIn,setLoggedIn] = useState(() => localStorage.getItem('eh_logged_in') === '1')
-  const [persona,setPersona] = useState(() => personas.includes(localStorage.getItem('eh_persona')) ? localStorage.getItem('eh_persona') : 'analyst')
-  const [star,setStar] = useState(() => stars.includes(Number(localStorage.getItem('eh_star'))) ? Number(localStorage.getItem('eh_star')) : 7)
-  const [step,setStep] = useState(0)
-  const [journey,setJourney] = useState(false)
-  const [activeNav,setActiveNav] = useState('Home')
-  const [manualView,setManualView] = useState(null)
-  const [searchOpen,setSearchOpen] = useState(false)
-  const [loading,setLoading] = useState(false)
-  const [question,setQuestion] = useState(questions[0])
-  const [analysisLevel,setAnalysisLevel] = useState('All levels')
-  const timer = useRef(null)
-  const cancelPending = () => { clearTimeout(timer.current); setLoading(false) }
-  useEffect(() => () => clearTimeout(timer.current), [])
-
-  useEffect(() => { localStorage.setItem('eh_persona',persona) }, [persona])
-  useEffect(() => { localStorage.setItem('eh_star',String(star)) }, [star])
-  useEffect(() => {
-    const handler = (e) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setSearchOpen(true) } }
-    window.addEventListener('keydown',handler); return () => window.removeEventListener('keydown',handler)
-  },[])
-
-  const flow = experienceFlows[persona][star]
-  const screen = flow.screens[step] || flow.screens[0]
-
-  const login = () => { localStorage.setItem('eh_logged_in','1'); setLoggedIn(true) }
-  const logout = () => { reset(); localStorage.removeItem('eh_logged_in'); setLoggedIn(false); setJourney(false); setStep(0) }
-  const reset = () => { cancelPending(); setQuestion(questions[0]); setAnalysisLevel('All levels'); setSearchOpen(false); setStep(0); setJourney(false); setManualView(null); setActiveNav('Home') }
-  const changePersona = (p) => { reset(); setPersona(p) }
-  const changeStar = (s) => { reset(); setStar(s) }
-  const startJourney = () => { cancelPending(); setJourney(true); setManualView(null); setStep(0); setActiveNav(personaMeta[persona].nav[0]) }
-  const next = () => {
-    if (loading) return
-    setJourney(true)
-    if (step >= flow.screens.length - 1) { setStep(0); setJourney(false); setActiveNav('Home'); return }
-    const current = flow.screens[step]
-    if (['intent','progress'].includes(current.kind)) {
-      setLoading(true)
-      timer.current = setTimeout(() => { setLoading(false); setStep(s => s + 1) }, current.kind === 'intent' ? 800 : 650)
-    } else setStep(s => s + 1)
+  const [backstage,setBackstage]=useState(false)
+  const [loggedIn,setLoggedIn]=useState(()=>localStorage.getItem('eh_logged_in')==='1')
+  const [selection,setSelection]=useState(()=>{
+    const config=getExperience(localStorage.getItem('eh_persona'),Number(localStorage.getItem('eh_star')))
+    return {persona:config.persona,star:config.star,generation:0}
+  })
+  const config=getExperience(selection.persona,selection.star)
+  // Only these demo-control callbacks can change persona or star.
+  const select=(persona,star)=>{
+    if(!personas.includes(persona)||!stars.includes(star))return
+    setBackstage(false)
+    localStorage.setItem('eh_persona',persona);localStorage.setItem('eh_star',String(star))
+    window.history.replaceState(null,'',routeHash(getExperience(persona,star),'step-0'))
+    setSelection(s=>({persona,star,generation:s.generation+1}))
   }
-  const back = () => {
-    cancelPending()
-    if (manualView) { setManualView(null); setActiveNav('Home'); return }
-    if (step > 0) setStep(s => s - 1)
-    else { setJourney(false); setActiveNav('Home') }
-  }
-  const onNav = (label) => {
-    cancelPending()
-    if (label === 'Ask Edu Hub') { reset(); setStar(9); setJourney(true); setActiveNav(label); return }
-    const destination = { 'Data products': [persona === 'system' ? 'system' : 'analyst',5,0], 'Developer':['system',5,0], 'Consumers':['system',11,0], 'Subscriptions':['system',7,0], 'Projects':['partner',7,0], 'Data requests':['analyst',5,2] }[label]
-    if (destination && destination[0] === persona) { reset(); setStar(destination[1]); setStep(destination[2]); setJourney(true); setActiveNav(label); return }
-    setActiveNav(label)
-    const manual = manualScreenFor(persona,label)
-    if (!manual) { setManualView(null); setJourney(false); setStep(0) }
-    else { setManualView(manual); setJourney(false) }
-  }
-
-  if (!loggedIn) return <Login onLogin={login}/>
-
-  return <div className="app-shell">
-    <Topbar key={`${persona}-${star}`} persona={persona} star={star} onSearch={() => setSearchOpen(true)} onLogout={logout}/>
-    <Sidebar persona={persona} activeNav={activeNav} onNav={onNav}/>
-    <main className="main-area">
-      <React.Fragment key={`${persona}-${star}-${manualView?.title || (journey ? step : 'home')}`}>
-      {manualView ? renderScreen(manualView,{onNext:startJourney,onBack:back,loading:false,question,onQuestion:setQuestion,analysisLevel,onAnalysisLevel:setAnalysisLevel}) : journey || star === 11 ? renderScreen(screen,{onNext:next,onBack:back,loading,question,onQuestion:setQuestion,analysisLevel,onAnalysisLevel:setAnalysisLevel,atEnd:step===flow.screens.length-1}) : <HomeContext persona={persona} star={star} onStart={startJourney}/>}
-      </React.Fragment>
-    </main>
-    <PrototypeControl persona={persona} star={star} onPersona={changePersona} onStar={changeStar} onReset={reset} onBackstage={() => onNav('Governance')}/>
-    {searchOpen && <SearchOverlay persona={persona} onClose={() => setSearchOpen(false)} onPick={onNav}/>}
-  </div>
+  const login=()=>{localStorage.setItem('eh_logged_in','1');setLoggedIn(true)}
+  const logout=()=>{setBackstage(false);localStorage.removeItem('eh_logged_in');setLoggedIn(false);setSelection(s=>({...s,generation:s.generation+1}));window.history.replaceState(null,'',routeHash(config,config.landing))}
+  if(!loggedIn)return <Login onLogin={login}/>
+  return <><Experience key={`${config.scope}/${selection.generation}`} config={config} backstage={backstage} setBackstage={setBackstage} onLogout={logout}/><PrototypeControl persona={config.persona} star={config.star} onPersona={persona=>select(persona,config.star)} onStar={star=>select(config.persona,star)} onReset={()=>select(config.persona,config.star)} onBackstage={()=>setBackstage(true)}/></>
 }
 
 export default App

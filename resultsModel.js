@@ -44,7 +44,8 @@ export const questions = [
 ]
 export function answerQuestion(question) {
   const q = question.trim().toLowerCase().replace(/[?.!]+$/g, '')
-  const topic = questions.findIndex(item => item.toLowerCase().replace(/[?.!]+$/g, '') === q)
+  const aliases = {'what is driving the decline in school a':1,'show me whether this is concentrated in a particular level':5}
+  const topic = aliases[q] ?? questions.findIndex(item => item.toLowerCase().replace(/[?.!]+$/g, '') === q)
   const base = { title: 'Results Q&A', evidence: resultsEvidence, metrics: [], question }
   if (topic === 0) return { ...base, headline: 'School A has the largest Mathematics decline: 8 pp', body: 'Eight schools declined. School A moved from 84% to 76%, followed by School B (−7 pp) and School C (−6 pp). Delayed submissions are excluded.', metrics: [['Schools with declines', '8'], ['School A change', '−8 pp'], ['Comparison', resultsContext.period]], rows: schoolResults.map(s => [s.school, `${s.previous}%`, `${s.current}%`, `${s.change} pp`]) }
   if (topic === 1) return { ...base, headline: 'School A: the largest change is in Secondary 2', body: 'Secondary 2 Mathematics fell from 82% to 70% (−12 pp); Secondary 1 fell from 86% to 82% (−4 pp). In this equally weighted synthetic cohort, these combine to the school’s −8 pp change. This locates the change; it does not explain its cause.', metrics: [['Secondary 2', '−12 pp'], ['Secondary 1', '−4 pp'], ['School A', '−8 pp']] }
