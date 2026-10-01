@@ -1,716 +1,763 @@
+import { reproducibleSQL } from './resultsModel.js'
+
 export const experienceFlows = {
-  analyst: {
-    5: {
-      entryLabel: 'Browse trusted data',
-      screens: [
+  "analyst": {
+    "5": {
+      "entryLabel": "Find Student Academic Results",
+      "screens": [
         {
-          kind: 'catalog',
-          title: 'Data products',
-          subtitle: 'Browse trusted, governed data available in Edu Hub.',
-          search: 'student attendance',
-          productIds: ['attendance', 'identity', 'calendar'],
-          primaryLabel: 'Open Student Attendance',
+          "kind": "catalog",
+          "title": "Data products",
+          "subtitle": "Choose an asset, inspect its contract and build your own analysis.",
+          "search": "Student Academic Results",
+          "productIds": ["results","identity","attendance"],
+          "primaryLabel": "Open Student Academic Results"
         },
         {
-          kind: 'asset',
-          productId: 'attendance',
-          primaryLabel: 'Request access',
-          secondaryLabel: 'View sample SQL',
+          "kind": "asset",
+          "productId": "results",
+          "primaryLabel": "Request access",
+          "secondaryLabel": "View sample SQL"
         },
         {
-          kind: 'form',
-          title: 'Request access',
-          subtitle: 'Request Student Attendance for a defined analytical purpose.',
-          fields: [
-            ['Purpose', 'Analyse frequent student absence and understand which student groups are most affected.'],
-            ['Workspace', 'HQ Analytics Workspace'],
-            ['Requested products', 'Student Attendance, Student Identity'],
-            ['Access period', '90 days'],
+          "kind": "form",
+          "title": "Request Results access",
+          "subtitle": "Purpose and workspace determine entitlement.",
+          "fields": [
+            ["Purpose","Compare academic results by subject, level and school."],
+            ["Workspace","HQ Analytics"],
+            ["Requested data","Student Academic Results, Student Identity"],
+            ["Access period","90 days"]
           ],
-          primaryLabel: 'Submit request',
+          "primaryLabel": "Submit request"
         },
         {
-          kind: 'workspace',
-          title: 'Frequent student absence analysis',
-          subtitle: 'HQ Analytics Workspace',
-          badges: ['2 products connected', 'Access approved'],
-          code: `SELECT\n  s.school_code,\n  s.level,\n  COUNT_IF(a.attendance_status = 'ABSENT') AS absent_days\nFROM student_attendance a\nJOIN student_identity s USING (student_id)\nGROUP BY 1, 2\nORDER BY absent_days DESC;`,
-          resultColumns: ['school_code', 'level', 'absent_days'],
-          resultRows: [
-            ['SCH-014', 'Secondary 1', '438'],
-            ['SCH-022', 'Secondary 2', '391'],
-            ['SCH-009', 'Secondary 1', '372'],
+          "kind": "workspace",
+          "title": "Academic Results notebook",
+          "subtitle": "HQ Analytics · 2026 vs 2025 · Synthetic data",
+          "badges": ["Results v1.2","Authorised HQ scope"],
+          "code": "-- Write your SQL here. Inspect schema and definitions before running.",
+          "resultColumns": ["Subject","2025","2026","Change"],
+          "resultRows": [
+            ["Mathematics","83.9%","79.4%","−4.5 pp"],
+            ["English","85.0%","88.0%","+3.0 pp"]
           ],
-          assistant: 'I can explain fields, generate SQL or check whether your joins use governed keys.',
-        },
-      ],
+          "assistant": "Review the comparison basis and cohort composition. Two delayed school submissions are excluded.",
+          "manual": true
+        }
+      ]
     },
-    7: {
-      entryLabel: 'Start from an analysis use case',
-      screens: [
+    "7": {
+      "entryLabel": "Describe an analysis need",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Analysis setup',
-          title: 'What are you trying to analyse?',
-          subtitle: 'Describe the business question. Edu Hub will recommend governed data and a starting workspace.',
-          prompt: 'I want to analyse frequent student absence and understand which student groups are most affected.',
-          suggestions: ['Attendance trends by cohort', 'Academic results over time', 'Student support indicators'],
-          primaryLabel: 'Build analysis setup',
+          "kind": "intent",
+          "title": "What analysis do you need?",
+          "eyebrow": "Academic Results",
+          "prompt": "I want to compare results trends by subject, level and school.",
+          "primaryLabel": "Recommend analysis",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'plan',
-          title: 'Recommended analysis setup',
-          subtitle: 'Edu Hub prepared the minimum useful starting point.',
-          rows: [
-            ['Primary data', 'Student Attendance', 'Daily attendance, absence categories and latecoming', 'SDP'],
-            ['Join context', 'Student Identity', 'School, class, level and student profile', 'SDP'],
-            ['Metric', 'Frequent absence rate v3', 'Students absent on 10% or more instructional days in the selected period', 'Governed'],
-            ['Workspace', 'HQ Analytics Workspace', 'SQL + Python starter notebook', 'Ready'],
-            ['Optional local data', 'CSV / Excel / Teams export', 'Can be added inside the controlled workspace after scanning', 'Optional'],
+          "kind": "plan",
+          "title": "Recommended analysis setup",
+          "subtitle": "Review the proposed starting point before proceeding.",
+          "rows": [
+            ["Dataset","Student Academic Results v1.2","Final subject results for 2025 and 2026","Certified"],
+            ["Join","Student Identity v1.8","Governed school and level keys; no free-text joins","Governed"],
+            ["Metric","Subject pass rate v1","Passes ÷ valid final results; change in pp","Governed"]
           ],
-          checks: [
-            ['Student Identity', 'Already granted'],
-            ['Student Attendance', 'Owner approval'],
-            ['Sensitive notes', 'Not included'],
+          "checks": [
+            ["Scope","Authorised HQ"],
+            ["Delayed submissions","2 excluded"]
           ],
-          primaryLabel: 'Set up analysis',
-          secondaryLabel: 'Adjust setup',
+          "primaryLabel": "Assemble workspace"
         },
         {
-          kind: 'progress',
-          title: 'Setting up your analysis',
-          subtitle: 'Edu Hub is coordinating access and workspace setup.',
-          tasks: [
-            ['Analysis intent captured', 'Frequent student absence by student group'],
-            ['Student Identity entitlement checked', 'Existing HQ access reused'],
-            ['Student Attendance approval', 'Submitted to Student Data Domain owner'],
-            ['Workspace preparation', 'Notebook, joins and metric definitions'],
+          "kind": "progress",
+          "title": "Preparing your analysis",
+          "subtitle": "Demonstration of governed provisioning; no production access is granted.",
+          "tasks": [
+            ["Purpose recorded","Academic Results analysis"],
+            ["Entitlements reviewed","Student Results + Student Identity"],
+            ["Workspace prepared","Approved fields and governed keys"],
+            ["Ready for use","Sandbox and audit enabled"]
           ],
-          summary: [['Data products', '2'], ['Governed metrics', '1'], ['Manual extracts', '0']],
-          primaryLabel: 'Simulate approval',
+          "summary": [
+            ["Products","2"],
+            ["Audit","On"]
+          ],
+          "primaryLabel": "Simulate approval"
         },
         {
-          kind: 'workspace',
-          title: 'Frequent student absence',
-          subtitle: 'Starter analysis prepared from your approved setup.',
-          badges: ['2 SDPs connected', 'Frequent absence rate v3'],
-          code: `-- Prepared by Edu Hub. Review and edit before use.\nWITH attendance AS (\n  SELECT * FROM student_attendance\n),\nstudents AS (\n  SELECT student_id, school_code, level\n  FROM student_identity\n)\nSELECT level,\n       frequent_absence_rate(attendance.*) AS rate\nFROM attendance\nJOIN students USING (student_id)\nGROUP BY level;`,
-          chart: 'cohort',
-          assistant: 'I prepared the governed metric and recommended join. You can change the breakdown before running.',
-        },
-      ],
+          "kind": "workspace",
+          "title": "Prepared Results analysis",
+          "subtitle": "HQ Analytics · 2026 vs 2025 · Synthetic data",
+          "badges": ["Results v1.2","Authorised HQ scope"],
+          "code": reproducibleSQL,
+          "resultColumns": ["Subject","2025","2026","Change"],
+          "resultRows": [
+            ["Mathematics","83.9%","79.4%","−4.5 pp"],
+            ["English","85.0%","88.0%","+3.0 pp"]
+          ],
+          "assistant": "Review the comparison basis and cohort composition. Two delayed school submissions are excluded.",
+          "manual": false
+        }
+      ]
     },
-    9: {
-      entryLabel: 'Start from analytical intent',
-      screens: [
+    "9": {
+      "entryLabel": "Ask an analytical question",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Analytical intent',
-          title: 'What do you want to understand?',
-          subtitle: 'Ask in analytical terms. Edu Hub will prepare a reviewable data and analysis plan.',
-          prompt: 'Which student groups show the strongest increase in frequent student absence this term, and where should I investigate further?',
-          suggestions: ['Compare current vs previous term', 'Highlight unusual cohorts', 'Show only trusted data'],
-          primaryLabel: 'Prepare analysis',
+          "kind": "intent",
+          "title": "What do you want to understand?",
+          "eyebrow": "Academic Results",
+          "prompt": "Which subjects show the largest year-on-year decline?",
+          "primaryLabel": "Propose analytical method",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'plan',
-          title: 'Proposed analysis',
-          subtitle: 'Review the approach before Edu Hub creates the workspace.',
-          rows: [
-            ['Question', 'Largest term-on-term increase', 'Rank cohorts and identify concentration', 'Interpreted'],
-            ['Data', 'Student Attendance + Student Identity', '11 fields selected, 9 unnecessary fields excluded', 'Approved'],
-            ['Metric', 'Frequent absence rate v3', 'Students absent on 10% or more instructional days; current term vs prior term', 'Governed'],
-            ['Quality', '2 school feeds delayed', 'Those results will be marked provisional', 'Warning'],
+          "kind": "plan",
+          "title": "Review the analytical method",
+          "subtitle": "Review the proposed starting point before proceeding.",
+          "rows": [
+            ["Dataset","Student Academic Results v1.2","Final subject results for 2025 and 2026","Certified"],
+            ["Join","Student Identity v1.8","Governed school and level keys; no free-text joins","Governed"],
+            ["Metric","Subject pass rate v1","Passes ÷ valid final results; change in pp","Governed"],
+            ["Comparison","2026 vs 2025","Same subject, level and assessment basis","Review"],
+            ["Quality","Exclude delayed schools","School I and School J; no imputation","Warning"],
+            ["Limitation","Changing cohorts","Descriptive comparison, not causal attribution","Review"]
           ],
-          checks: [
-            ['HQ analysis scope', 'Pass'],
-            ['Counselling notes', 'Excluded'],
-            ['Student-level drill-down', 'Allowed'],
+          "checks": [
+            ["Scope","Authorised HQ"],
+            ["Delayed submissions","2 excluded"]
           ],
-          primaryLabel: 'Create workspace',
-          secondaryLabel: 'Edit plan',
+          "primaryLabel": "Generate analysis",
+          "editable": true
         },
         {
-          kind: 'incident',
-          title: 'Data quality issue detected',
-          subtitle: 'Edu Hub found a freshness issue before running the analysis.',
-          severity: 'Degraded, not blocked',
-          summary: 'Two school attendance feeds have not arrived by the expected cut-off. Edu Hub can continue without presenting those values as current.',
-          affected: [
-            ['SCH-031 attendance feed', 'Last received yesterday 5:54 PM', 'Provisional'],
-            ['SCH-047 attendance feed', 'Last received yesterday 5:49 PM', 'Provisional'],
+          "kind": "incident",
+          "title": "Two Results submissions are delayed",
+          "subtitle": "Quality and limitations remain visible before analysis.",
+          "severity": "Degraded source freshness",
+          "summary": "School I and School J are missing comparable final 2026 submissions.",
+          "affected": [
+            ["School I","Delayed","Excluded, never zero-filled"],
+            ["School J","Delayed","Excluded, never zero-filled"]
           ],
-          handling: [
-            ['Default', 'Exclude the two schools from current-period conclusions'],
-            ['Evidence', 'Keep the delayed-feed warning attached to outputs'],
-            ['Recovery', 'Refresh automatically when the feeds arrive'],
+          "handling": [
+            ["Analysis","Continue on eight current schools"],
+            ["Limitation","No complete MOE-wide conclusion"],
+            ["Recovery","Refresh after source validation"]
           ],
-          primaryLabel: 'Continue with safe handling',
-          secondaryLabel: 'Wait for refresh',
+          "primaryLabel": "Continue with safe handling"
         },
         {
-          kind: 'workspace',
-          title: 'Frequent student absence',
-          subtitle: 'Generated starting analysis. Review before running.',
-          badges: ['Policy checked', '2 feeds delayed'],
-          code: `-- Generated from your approved analysis plan\nWITH current_term AS (...),\n     prior_term AS (...)\nSELECT cohort_group,\n       current_rate - prior_rate AS change_pp\nFROM current_term\nJOIN prior_term USING (cohort_group)\nORDER BY change_pp DESC;`,
-          resultColumns: ['Cohort', 'Change', 'Status'],
-          resultRows: [
-            ['Lower secondary', '+1.8 pp', 'Current'],
-            ['Selected programme group', '+1.4 pp', 'Current'],
-            ['School cluster A', '+1.3 pp', 'Affected schools excluded'],
+          "kind": "workspace",
+          "title": "Reviewed Results analysis",
+          "subtitle": "HQ Analytics · 2026 vs 2025 · Synthetic data",
+          "badges": ["Results v1.2","Authorised HQ scope"],
+          "code": reproducibleSQL,
+          "resultColumns": ["Subject","2025","2026","Change"],
+          "resultRows": [
+            ["Mathematics","83.9%","79.4%","−4.5 pp"],
+            ["English","85.0%","88.0%","+3.0 pp"]
           ],
-          assistant: 'I generated this from Frequent absence rate v3. Two school feeds are delayed, so affected schools are excluded from current-period conclusions. No counselling-note content is included.',
-        },
-      ],
+          "assistant": "Review the comparison basis and cohort composition. Two delayed school submissions are excluded.",
+          "manual": false
+        }
+      ]
     },
-    11: {
-      entryLabel: 'Start from the question itself',
-      screens: [
+    "11": {
+      "entryLabel": "Open analysis briefing",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Analysis',
-          title: 'Ask a question about MOE data',
-          subtitle: 'Edu Hub assembles the authorised evidence while keeping data, definitions and assumptions inspectable.',
-          prompt: 'Which student groups show the strongest increase in frequent student absence this term, and what evidence supports that?',
-          suggestions: ['Show evidence', 'Compare with previous term', 'Explain uncertainty'],
-          primaryLabel: 'Analyse',
+          "kind": "briefing",
+          "audience": "analyst",
+          "title": "Your refreshed analysis briefing",
+          "subtitle": "Based on your followed Academic Results topic and recent subject-trend notebook.",
+          "primaryLabel": "Open reproducible analysis"
         },
         {
-          kind: 'answer',
-          title: 'Frequent student absence',
-          headline: 'Increase is concentrated in a small number of lower-secondary cohorts',
-          body: 'The strongest term-on-term increases are concentrated in selected lower-secondary cohorts across a small set of schools. The MOE-wide rate is relatively stable. Two school feeds are delayed today, so their latest values are marked provisional.',
-          metrics: [['Largest cohort change', '+1.8 pp'], ['Schools driving change', '4'], ['Delayed feeds', '2']],
-          chart: 'cohort',
-          evidence: [
-            ['Student Attendance', 'Standard data product · healthy'],
-            ['Student Identity', 'Standard data product · healthy'],
-            ['Frequent absence rate v3', 'Governed definition'],
-            ['Data quality', '2 delayed school feeds flagged'],
-            ['Excluded', 'No counselling-note content used'],
+          "kind": "workspace",
+          "title": "Reproducible Results analysis",
+          "subtitle": "HQ Analytics · 2026 vs 2025 · Synthetic data",
+          "badges": ["Results v1.2","Authorised HQ scope"],
+          "code": reproducibleSQL,
+          "resultColumns": ["Subject","2025","2026","Change"],
+          "resultRows": [
+            ["Mathematics","83.9%","79.4%","−4.5 pp"],
+            ["English","85.0%","88.0%","+3.0 pp"]
           ],
-          primaryLabel: 'Open reproducible analysis',
-          secondaryLabel: 'Ask follow-up',
-        },
-        {
-          kind: 'workspace',
-          title: 'Reproducible analysis',
-          subtitle: 'Everything behind the answer is inspectable and rerunnable.',
-          badges: ['Reproducible', '2 SDPs', 'Definition v3'],
-          code: `-- Snapshot generated for this answer\n-- Sources: Student Attendance, Student Identity\n-- Metric: Frequent absence rate v3\n-- Quality: 2 source feeds provisional\n\nSELECT cohort_group,\n       current_rate,\n       prior_rate,\n       current_rate - prior_rate AS change_pp\nFROM governed_frequent_absence_comparison;`,
-          assistant: 'This is the exact analysis used for the previous answer. You can edit, rerun or inspect lineage.',
-        },
-      ],
-    },
+          "assistant": "Review the comparison basis and cohort composition. Two delayed school submissions are excluded.",
+          "manual": false
+        }
+      ]
+    }
   },
-
-  business: {
-    5: {
-      entryLabel: 'Browse trusted business experiences',
-      screens: [
+  "business": {
+    "5": {
+      "entryLabel": "Find Student Academic Results",
+      "screens": [
         {
-          kind: 'discover',
-          title: 'Discover',
-          subtitle: 'Find trusted dashboards and self-service experiences.',
-          search: 'attendance trends',
-          items: [
-            ['Dashboard', 'Student Attendance Overview', 'School and cohort attendance trends for authorised users.', 'Trusted'],
-            ['Self-service', 'Students Missing School Frequently', 'Explore where students are missing school frequently using a clearly defined governed measure.', 'Trusted'],
-            ['Data product', 'Student Attendance', 'Technical data product for analysts and systems.', 'Technical'],
+          "kind": "discover",
+          "title": "Discover",
+          "subtitle": "Find and choose a trusted report. Apply your own filters.",
+          "search": "Student Academic Results",
+          "items": [
+            ["Dashboard","Student Academic Results","Subject pass rates by school, level and year.","Trusted"]
           ],
-          primaryLabel: 'Open Student Attendance Overview',
+          "primaryLabel": "Open Student Academic Results"
         },
         {
-          kind: 'dashboardDetail',
-          title: 'Student Attendance Overview',
-          subtitle: 'Trusted business view for monitoring attendance.',
-          primaryLabel: 'Request access',
+          "kind": "dashboardDetail",
+          "title": "Student Academic Results",
+          "subtitle": "Inspect the trusted dashboard before opening it.",
+          "primaryLabel": "Open dashboard"
         },
         {
-          kind: 'dashboard',
-          title: 'Student Attendance Overview',
-          subtitle: 'Attendance v3 · Updated today, 6:04 PM',
-          metrics: [['Attendance rate', '92.8%'], ['Students with frequent absence', '4.7%'], ['Schools above threshold', '12'], ['Data freshness', 'Today 6:04 PM']],
-          chart: 'monthly',
-          table: [
-            ['School cluster A', '+2.6 pp'],
-            ['School cluster B', '+2.2 pp'],
-            ['Lower secondary', '+1.8 pp'],
-          ],
-        },
-      ],
+          "kind": "resultsDashboard",
+          "title": "Student Academic Results",
+          "subtitle": "Trusted aggregate results · Synthetic fixture · Authorised HQ scope",
+          "prepared": false
+        }
+      ]
     },
-    7: {
-      entryLabel: 'Start from a business need',
-      screens: [
+    "7": {
+      "entryLabel": "Prepare a leadership briefing",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Business question',
-          title: 'What do you need to understand?',
-          subtitle: 'Describe the business need. Edu Hub will recommend the right trusted experience.',
-          prompt: 'I want to know which schools or student groups may need attention based on attendance trends.',
-          suggestions: ['Attendance trends', 'Frequent absence', 'Changes since last term'],
-          primaryLabel: 'Show recommendations',
+          "kind": "intent",
+          "title": "What do you need to prepare?",
+          "eyebrow": "Academic Results",
+          "prompt": "I need a briefing on this year’s academic results for senior leaders.",
+          "primaryLabel": "Recommend a results view",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'recommendations',
-          title: 'Recommended experiences',
-          subtitle: 'Start with the simplest trusted way to answer the question.',
-          items: [
-            ['Best match', 'Students Missing School Frequently', 'Compare schools and cohorts using the governed measure for students absent on 10% or more instructional days.', 'Access granted'],
-            ['Dashboard', 'Student Attendance Overview', 'High-level monitoring and trend view.', 'Trusted'],
-            ['Self-service Q&A', 'Ask attendance data', 'Use natural language for follow-up questions.', 'Available'],
-            ['Technical option', 'Student Attendance SDP', 'For analysts who need lower-level data.', 'Optional'],
+          "kind": "recommendations",
+          "title": "Your recommended Results view",
+          "subtitle": "2026 vs 2025, all subjects and HQ schools are already selected.",
+          "items": [
+            ["Best match","Academic Results leadership view","Pre-built comparison by subject, level and school. Prepared for senior leaders.","Access granted"]
           ],
-          primaryLabel: 'Open best match',
+          "primaryLabel": "Open prepared view"
         },
         {
-          kind: 'dashboard',
-          title: 'Students Missing School Frequently',
-          subtitle: 'Frequent absence rate v3 · Your HQ access scope',
-          metrics: [['Attendance rate', '92.8%'], ['Students with frequent absence', '4.7%'], ['Schools above threshold', '12'], ['Definition', 'v3']],
-          chart: 'school',
-          table: [
-            ['Which cohorts drive the increase?', 'Suggested follow-up'],
-            ['What changed since last term?', 'Suggested follow-up'],
-            ['Which schools account for most change?', 'Suggested follow-up'],
-          ],
-        },
-      ],
+          "kind": "resultsDashboard",
+          "title": "Student Academic Results",
+          "subtitle": "Trusted aggregate results · Synthetic fixture · Authorised HQ scope",
+          "prepared": true
+        }
+      ]
     },
-    9: {
-      entryLabel: 'Ask a governed business question',
-      screens: [
+    "9": {
+      "entryLabel": "Ask Edu Hub",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Business Q&A',
-          title: 'Ask a question about your area',
-          subtitle: 'Answers use governed definitions and your authorised scope.',
-          prompt: 'Which schools have seen a meaningful increase in frequent student absence this term?',
-          suggestions: ['Explain the calculation', 'Show only current data', 'Compare with previous term'],
-          primaryLabel: 'Ask',
+          "kind": "intent",
+          "title": "Ask Edu Hub",
+          "eyebrow": "Academic Results",
+          "prompt": "Which schools saw the biggest drop in Mathematics pass rates this year?",
+          "primaryLabel": "Ask",
+          "subtitle": "Ask first. Edu Hub returns a computed example answer with evidence and limitations.",
+          "businessQuestion": true,
+          "suggestions": ["Compare subjects","Explain the calculation","Show only current data"]
         },
         {
-          kind: 'answer',
-          title: 'Attendance Q&A',
-          headline: '12 schools show a material increase this term',
-          body: 'Four schools account for most of the overall increase. Two schools have delayed source feeds today, so their latest values are marked provisional.',
-          metrics: [['Schools above threshold', '12'], ['Largest change', '+2.6 pp'], ['Provisional', '2']],
-          chart: 'school',
-          evidence: [
-            ['Metric', 'Frequent absence rate v3 · absent on ≥10% of instructional days'],
-            ['Comparison', 'Current term vs previous term'],
-            ['Scope', 'Your HQ access applied'],
-            ['Quality', '2 delayed feeds flagged'],
-          ],
-          primaryLabel: 'Show schools',
-          secondaryLabel: 'Explain calculation',
+          "kind": "businessAnswer",
+          "title": "Results Q&A",
+          "primaryLabel": "Show schools"
         },
         {
-          kind: 'table',
-          title: 'School drill-down',
-          subtitle: 'Same definition, comparison period and access scope.',
-          columns: ['School group', 'Frequent absence', 'Change', 'Data status'],
-          rows: [
-            ['School cluster A', '6.2%', '+2.6 pp', 'Current'],
-            ['School cluster B', '5.8%', '+2.2 pp', 'Current'],
-            ['School cluster C', '5.1%', '+1.4 pp', 'Provisional'],
-          ],
-        },
-      ],
+          "kind": "table",
+          "title": "Results school comparison",
+          "subtitle": "Mathematics · 2026 vs 2025 · current submissions only · synthetic data",
+          "columns": ["School","2025","2026","Change"],
+          "rows": [
+            ["School A","84%","76%","−8 pp"],
+            ["School B","82%","75%","−7 pp"],
+            ["School C","88%","82%","−6 pp"],
+            ["School D","80%","75%","−5 pp"],
+            ["School E","86%","82%","−4 pp"],
+            ["School F","83%","80%","−3 pp"],
+            ["School G","81%","79%","−2 pp"],
+            ["School H","87%","86%","−1 pp"]
+          ]
+        }
+      ]
     },
-    11: {
-      entryLabel: 'Receive a contextual data briefing',
-      screens: [
+    "11": {
+      "entryLabel": "Open Results briefing",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Your data briefing',
-          title: 'What do you need to know?',
-          subtitle: 'Ask in business language. Edu Hub keeps context, definitions and permissions throughout the conversation.',
-          prompt: 'Give me a briefing on frequent student absence this term. What has changed and where should I look?',
-          suggestions: ['What changed since last month?', 'Show affected cohorts', 'Show supporting evidence'],
-          primaryLabel: 'Create briefing',
+          "kind": "briefing",
+          "audience": "business",
+          "title": "Your Results briefing",
+          "subtitle": "Prepared for Julius · Business Officer · Followed topic: Academic Results · 2026 vs 2025",
+          "primaryLabel": "Explore drivers"
         },
         {
-          kind: 'answer',
-          title: 'Attendance briefing',
-          headline: 'Overall attendance is stable, but increases are concentrated in a small set of cohorts',
-          body: 'Frequent absence is broadly stable at MOE level. The main change is a concentration of higher absence in selected lower-secondary cohorts across four schools. Two delayed feeds are excluded from strong conclusions.',
-          metrics: [['MOE-level change', '+0.2 pp'], ['Concentrated schools', '4'], ['Provisional feeds', '2']],
-          chart: 'cohort',
-          evidence: [
-            ['Governed metrics', 'Attendance rate; Frequent absence rate v3 (absent on ≥10% of instructional days)'],
-            ['Products', 'Student Attendance, Student Identity'],
-            ['Scope', 'HQ authorised'],
-            ['Lineage', 'Available for every statement'],
-          ],
-          primaryLabel: 'Ask follow-up',
+          "kind": "businessAnswer",
+          "title": "Explore Results",
+          "briefing": true,
+          "primaryLabel": "Show schools"
         },
         {
-          kind: 'conversation',
-          title: 'Attendance briefing',
-          subtitle: 'Conversation context preserved.',
-          messages: [
-            ['user', 'What changed since last month?'],
-            ['assistant', 'The MOE-wide rate changed little. Most of the shift is concentrated in lower-secondary cohorts across four schools.'],
-            ['user', 'Show me the evidence behind those four schools.'],
-            ['assistant', 'I can open the school comparison with the same definition, time window and access scope.'],
-          ],
-          context: [['Metric', 'Frequent absence rate v3 · absent on ≥10% of instructional days'], ['Comparison', 'Current term vs prior term'], ['Scope', 'HQ']],
-        },
-      ],
-    },
+          "kind": "table",
+          "title": "Results school comparison",
+          "subtitle": "Mathematics · 2026 vs 2025 · current submissions only · synthetic data",
+          "columns": ["School","2025","2026","Change"],
+          "rows": [
+            ["School A","84%","76%","−8 pp"],
+            ["School B","82%","75%","−7 pp"],
+            ["School C","88%","82%","−6 pp"],
+            ["School D","80%","75%","−5 pp"],
+            ["School E","86%","82%","−4 pp"],
+            ["School F","83%","80%","−3 pp"],
+            ["School G","81%","79%","−2 pp"],
+            ["School H","87%","86%","−1 pp"]
+          ]
+        }
+      ]
+    }
   },
-
-  system: {
-    5: {
-      entryLabel: 'Browse stable data contracts',
-      screens: [
+  "system": {
+    "5": {
+      "entryLabel": "Browse Results contracts",
+      "screens": [
         {
-          kind: 'contract',
-          title: 'Student Attendance',
-          subtitle: 'Stable contract for application consumption.',
-          productId: 'attendance',
-          delivery: ['REST API', 'Direct query', 'Managed file'],
-          primaryLabel: 'Choose REST API',
+          "kind": "contract",
+          "title": "Student Academic Results",
+          "subtitle": "Stable business contract for registered applications.",
+          "productId": "results",
+          "primaryLabel": "Choose REST API"
         },
         {
-          kind: 'api',
-          title: 'REST API',
-          subtitle: 'Student Attendance v2.3',
-          code: `GET /data-products/student-attendance/v2/records?student_id={id}\nAuthorization: Bearer <workload-token>\n\n200 OK\n{\n  "student_id": "S123",\n  "attendance_date": "2026-09-27",\n  "attendance_status": "PRESENT",\n  "freshness_timestamp": "2026-09-27T17:58:00+08:00"\n}`,
-          facts: [['Auth', 'Workload identity'], ['Rate limit', '600 req/min'], ['Sandbox', 'Available'], ['Non-AWS', 'Supported']],
-          primaryLabel: 'Request system access',
-        },
-        {
-          kind: 'form',
-          title: 'Request system access',
-          subtitle: 'Register the consuming system and approved purpose.',
-          fields: [
-            ['Consuming system', 'Student Support App'],
-            ['Purpose', 'Display current attendance information to authorised case officers.'],
-            ['Environment', 'Production'],
-            ['Delivery', 'REST API'],
+          "kind": "api",
+          "title": "Results API",
+          "subtitle": "Student Academic Results v1.2",
+          "code": "GET /v1/student-academic-results?academic_year=2026\nAuthorization: Bearer <workload-token>\n\n200 OK\n{ \"subject\": \"Mathematics\", \"passed\": true,\n  \"academic_year\": 2026, \"freshness_status\": \"current\" }",
+          "facts": [
+            ["Identity","Workload identity"],
+            ["Freshness","Daily by 6 PM"],
+            ["SLO","99.5%"],
+            ["Sandbox","Synthetic data only"]
           ],
-          primaryLabel: 'Submit request',
+          "primaryLabel": "Request system access"
         },
         {
-          kind: 'api',
-          title: 'Student Support App',
-          subtitle: 'Integration console · Sandbox ready',
-          code: `const response = await fetch(\n  "/data-products/student-attendance/v2/records",\n  { headers: { Authorization: \`Bearer ${'${token}'}\` } }\n);\n\n// Contract: student-attendance@2.3`,
-          facts: [['Sandbox', 'Ready'], ['Workload identity', 'Ready'], ['Production entitlement', 'Approved'], ['Contract tests', '6 available']],
+          "kind": "form",
+          "title": "Request system access",
+          "subtitle": "Register your consuming application and permitted use.",
+          "fields": [
+            ["Application","Results Support App"],
+            ["Purpose","Display approved academic results to authorised officers."],
+            ["Environment","Sandbox then production"],
+            ["Delivery","REST API"]
+          ],
+          "primaryLabel": "Submit request"
         },
-      ],
+        {
+          "kind": "api",
+          "title": "Manual integration console",
+          "subtitle": "Student Academic Results v1.2",
+          "code": "GET /v1/student-academic-results?academic_year=2026\nAuthorization: Bearer <workload-token>\n\n200 OK\n{ \"subject\": \"Mathematics\", \"passed\": true,\n  \"academic_year\": 2026, \"freshness_status\": \"current\" }",
+          "facts": [
+            ["Identity","Workload identity"],
+            ["Freshness","Daily by 6 PM"],
+            ["SLO","99.5%"],
+            ["Sandbox","Synthetic data only"]
+          ]
+        }
+      ]
     },
-    7: {
-      entryLabel: 'Start from the application need',
-      screens: [
+    "7": {
+      "entryLabel": "Describe the application need",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Integration assistant',
-          title: 'What does your application need?',
-          subtitle: 'Describe the business data need and operating constraints. Edu Hub will recommend the data products and delivery route.',
-          prompt: 'Our application needs current student identity and attendance data daily. It runs outside AWS and must not depend on Redshift connectivity.',
-          suggestions: ['Daily batch', 'Non-AWS consumer', 'Needs sandbox'],
-          primaryLabel: 'Recommend integration',
+          "kind": "intent",
+          "title": "What does your application need?",
+          "eyebrow": "Academic Results",
+          "prompt": "Our application needs student academic results daily and runs outside AWS.",
+          "primaryLabel": "Recommend integration",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'plan',
-          title: 'Recommended integration',
-          subtitle: 'Based on your application requirement.',
-          rows: [
-            ['Data product', 'Student Identity', 'Core identifiers and enrolment context', 'Required'],
-            ['Data product', 'Student Attendance', 'Daily attendance and absence status', 'Required'],
-            ['Delivery', 'REST API', 'Best fit for a non-AWS application', 'Recommended'],
-            ['Testing', 'Sandbox + contract tests', 'Included in subscription', 'Included'],
+          "kind": "plan",
+          "title": "Recommended Results integration",
+          "subtitle": "Review the proposed starting point before proceeding.",
+          "rows": [
+            ["Fields","student_id, subject, academic_year, passed","Only approved minimum fields; freshness metadata included","Review"],
+            ["Delivery","REST API","HTTPS for a non-AWS application","Recommended"],
+            ["Freshness","Daily by 6 PM","Expose last validated timestamp and status","Governed"]
           ],
-          checks: [['Products', '2'], ['Interface', 'REST API'], ['Environment', 'External cloud']],
-          primaryLabel: 'Subscribe',
-          secondaryLabel: 'Adjust requirement',
-        },
-        {
-          kind: 'progress',
-          title: 'Provisioning subscription',
-          subtitle: 'Student Support App',
-          tasks: [
-            ['Data owner approval', 'Student Identity and Attendance approved'],
-            ['Workload identity', 'Service principal created'],
-            ['Sandbox entitlement', 'Ready'],
-            ['Production API entitlement', 'Provisioning'],
+          "checks": [
+            ["Scope","Authorised HQ"],
+            ["Delayed submissions","2 excluded"]
           ],
-          summary: [['API contract', 'v2.3'], ['Contract tests', '6'], ['Telemetry', 'Enabled']],
-          primaryLabel: 'Continue to integration',
+          "primaryLabel": "Provision subscription"
         },
         {
-          kind: 'api',
-          title: 'Student Support App',
-          subtitle: 'Integration package',
-          code: `import { EduHubClient } from "@moe/eduhub";\n\nconst client = new EduHubClient({\n  products: [\n    "student-identity@1",\n    "student-attendance@2.3"\n  ]\n});\n\nconst attendance = await client.studentAttendance.get({ studentId });`,
-          facts: [['Sandbox', 'Ready'], ['Production', 'Ready'], ['Observability', 'Connected'], ['Breaking-change alerts', 'On']],
+          "kind": "progress",
+          "title": "Provisioning Results subscription",
+          "subtitle": "Demonstration of governed provisioning; no production access is granted.",
+          "tasks": [
+            ["Purpose recorded","Academic Results analysis"],
+            ["Entitlements reviewed","Student Results + Student Identity"],
+            ["Workspace prepared","Approved fields and governed keys"],
+            ["Ready for use","Sandbox and audit enabled"]
+          ],
+          "summary": [
+            ["Products","2"],
+            ["Audit","On"]
+          ],
+          "primaryLabel": "Open integration console"
         },
-      ],
+        {
+          "kind": "api",
+          "title": "Provisioned Results subscription",
+          "subtitle": "Student Academic Results v1.2",
+          "code": "GET /v1/student-academic-results?academic_year=2026\nAuthorization: Bearer <workload-token>\n\n200 OK\n{ \"subject\": \"Mathematics\", \"passed\": true,\n  \"academic_year\": 2026, \"freshness_status\": \"current\" }",
+          "facts": [
+            ["Identity","Workload identity"],
+            ["Freshness","Daily by 6 PM"],
+            ["SLO","99.5%"],
+            ["Sandbox","Synthetic data only"]
+          ]
+        }
+      ]
     },
-    9: {
-      entryLabel: 'Describe service requirements',
-      screens: [
+    "9": {
+      "entryLabel": "State a service requirement",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Integration assistant',
-          title: 'Describe the application requirement',
-          subtitle: 'State what the app needs. Edu Hub will derive the minimal contract and a suitable delivery pattern.',
-          prompt: 'We need student identity and same-day attendance. Volume is moderate, the consumer is outside AWS, and the app should tolerate source delays.',
-          suggestions: ['Same-day freshness', 'Cross-platform', 'Graceful degradation'],
-          primaryLabel: 'Generate contract',
+          "kind": "intent",
+          "title": "What service does your application need?",
+          "eyebrow": "Academic Results",
+          "prompt": "Our application needs student academic results daily, runs outside AWS, and requires student_id, subject, academic_year and passed. Serve last-known-good data for up to 24 hours during delays; fail closed after that.",
+          "primaryLabel": "Propose consumer contract",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'plan',
-          title: 'Proposed consumer contract',
-          subtitle: 'Review before generation.',
-          rows: [
-            ['Products', 'Student Identity + Student Attendance', 'Mapped from business requirement', '2 SDPs'],
-            ['Fields', '11 required', '7 unnecessary fields excluded', 'Minimised'],
-            ['Delivery', 'REST API', 'Cross-platform and moderate volume', 'Recommended'],
-            ['Resilience', 'Freshness indicator + last-known-good', 'Makes source delays explicit', 'Added'],
+          "kind": "plan",
+          "title": "Review consumer contract",
+          "subtitle": "Review the proposed starting point before proceeding.",
+          "rows": [
+            ["Fields","student_id, subject, academic_year, passed","Only approved minimum fields; freshness metadata included","Review"],
+            ["Delivery","REST API","HTTPS for a non-AWS application","Recommended"],
+            ["Freshness","Daily by 6 PM","Expose last validated timestamp and status","Governed"],
+            ["Fallback","Last-known-good ≤24 hours","Label stale; reject expired data and never bypass entitlement","Review"],
+            ["Version","v1 compatible","Additive fields only; breaking changes require v2 and notice","Supported"],
+            ["Compatibility","Consumer contract tests","Validate schema, access, stale data and expired entitlement","Included"]
           ],
-          checks: [['Sensitive fields', 'Pass'], ['Non-AWS', 'Supported'], ['Breaking changes', 'None']],
-          primaryLabel: 'Generate integration',
-          secondaryLabel: 'Edit fields',
+          "checks": [
+            ["Scope","Authorised HQ"],
+            ["Delayed submissions","2 excluded"]
+          ],
+          "primaryLabel": "Generate scaffold and tests"
         },
         {
-          kind: 'api',
-          title: 'Generated integration',
-          subtitle: 'Student Support App',
-          code: `const client = new EduHubClient({\n  contract: "student-attendance@2.3",\n  includeFreshness: true,\n  fallback: "last-known-good"\n});\n\nconst response = await client.getAttendance({ studentId });\n\nif (response.isStale) {\n  showFreshnessWarning(response.freshness);\n}`,
-          facts: [['SDK scaffold', 'Ready'], ['Contract tests', '8'], ['Observability hooks', 'Included'], ['Policy checks', 'Passed']],
+          "kind": "api",
+          "title": "Generated Results integration",
+          "subtitle": "Student Academic Results v1.2",
+          "code": "// Illustrative scaffold; replace endpoint and token in your application.\nasync function getResults(token) {\n  const response = await fetch('/v1/student-academic-results', {\n    headers: { Authorization: 'Bearer ' + token }\n  });\n  if (response.status === 403) throw new Error('Entitlement denied or expired');\n  if (!response.ok) throw new Error('Results unavailable');\n  const result = await response.json();\n  const age = Date.now() - Date.parse(result.validated_at);\n  if (!Number.isFinite(age) || age < 0 || age > 86400000)\n    throw new Error('No valid result within freshness contract');\n  return { ...result, showWarning: result.freshness_status !== 'current' };\n}\n// Contract checks: valid schema; additive field compatibility;\n// stale <=24h labelled; stale >24h rejected; 403 never uses cache.",
+          "facts": [
+            ["Minimum fields","4 + freshness metadata"],
+            ["Stale response","Label ≤24h; reject >24h"],
+            ["403 / expiry","Fail closed"],
+            ["Compatibility","v1 additive changes only"]
+          ],
+          "primaryLabel": "Inspect contract tests"
         },
-      ],
+        {
+          "kind": "contractTests",
+          "title": "Consumer contract checks"
+        }
+      ]
     },
-    11: {
-      entryLabel: 'Bind to a business-level contract',
-      screens: [
+    "11": {
+      "entryLabel": "Bind to a business-level contract",
+      "screens": [
         {
-          kind: 'consumerHealth',
-          title: 'Student Support App',
-          subtitle: 'Production consumer',
-          contracts: [
-            ['Student Attendance', 'Stable contract · v2 compatible · within SLO'],
-            ['Student Identity', 'Stable contract · v1 compatible · within SLO'],
+          "kind": "consumerHealth",
+          "title": "Results Support App",
+          "subtitle": "Your stable business contract is healthy. No consumer action required.",
+          "contracts": [
+            ["Student Academic Results","v1.2 compatible · daily by 6 PM · 99.5% SLO"]
           ],
-          facts: [['Implementation', 'Managed'], ['Storage dependency', 'None exposed'], ['SLO', '99.7%']],
-          primaryLabel: 'View latest platform change',
-        },
-        {
-          kind: 'change',
-          title: 'Platform change completed',
-          subtitle: 'No consumer action required.',
-          message: 'The underlying attendance implementation was migrated while the Student Attendance business contract remained unchanged.',
-          metrics: [['Consumer code changes', '0'], ['Contract tests', '47 / 47'], ['Downtime', '0 min'], ['SLO', '99.7%']],
-          primaryLabel: 'View compatibility',
-        },
-        {
-          kind: 'table',
-          title: 'Compatibility and consumer impact',
-          subtitle: 'Changes are evaluated against registered consumers before release.',
-          columns: ['Consumer', 'Contract', 'Latest test', 'Breaking impact'],
-          rows: [
-            ['Student Support App', 'v2.3', '47 passed', 'None'],
-            ['MOEinfo', 'v2.2', '36 passed', 'None'],
-            ['KM2', 'v2.3', '41 passed', 'None'],
+          "facts": [
+            ["Consumer code changes","0"],
+            ["Storage dependency","None exposed"],
+            ["Compatibility","47 / 47 checks passed"]
           ],
+          "primaryLabel": "View latest platform change"
         },
-      ],
-    },
+        {
+          "kind": "change",
+          "title": "Platform change completed",
+          "subtitle": "No consumer action required.",
+          "message": "Results delivery moved from Redshift to Databricks. Endpoint, fields, semantics and entitlements remain compatible; registered consumer code is unchanged.",
+          "metrics": [
+            ["Consumer code changes","0"],
+            ["Contract tests","47 / 47"],
+            ["Downtime","0 min"],
+            ["SLO","99.5%"]
+          ],
+          "primaryLabel": "View compatibility"
+        },
+        {
+          "kind": "table",
+          "title": "Compatibility and consumer impact",
+          "subtitle": "Changes are evaluated against registered consumers before release.",
+          "columns": ["Consumer","Contract","Latest test","Breaking impact"],
+          "rows": [
+            ["Results Support App","v1.2","47 passed","None"],
+            ["MOEinfo","v1.1","36 passed","None"],
+            ["KM2","v1.2","41 passed","None"]
+          ]
+        }
+      ]
+    }
   },
-
-  partner: {
-    5: {
-      entryLabel: 'Start from an approved data request',
-      screens: [
+  "partner": {
+    "5": {
+      "entryLabel": "Start from an approved data request",
+      "screens": [
         {
-          kind: 'form',
-          title: 'New data-sharing request',
-          subtitle: 'Register the approved purpose before selecting data.',
-          fields: [
-            ['Partner organisation', 'Example Programme Partner'],
-            ['Approved purpose', 'Deliver and evaluate an approved student support programme.'],
-            ['MOE sponsor', 'Programme owner'],
-            ['Access period', '6 months'],
+          "kind": "form",
+          "title": "New data-sharing request",
+          "subtitle": "Register the approved purpose before selecting data.",
+          "fields": [
+            ["Partner organisation","Example Programme Partner"],
+            ["Approved purpose","Evaluate academic outcomes of the Student Support Programme."],
+            ["MOE sponsor","Programme owner"],
+            ["Access period","180 days"],
+            ["Requested data","Pseudonymous participant ID, level, academic results band"]
           ],
-          primaryLabel: 'Continue',
+          "primaryLabel": "Continue"
         },
         {
-          kind: 'table',
-          title: 'Data package',
-          subtitle: 'Review the minimum data proposed for the approved purpose.',
-          columns: ['Field', 'Use', 'Decision'],
-          rows: [
-            ['Pseudonymous participant ID', 'Link programme records', 'Included'],
-            ['School code', 'Programme delivery context', 'Included'],
-            ['Attendance band', 'Programme evaluation', 'Included'],
-            ['Counselling notes', 'Not required', 'Excluded'],
+          "kind": "table",
+          "title": "Data package",
+          "subtitle": "Review the minimum data proposed for the approved purpose.",
+          "columns": ["Field","Use","Decision"],
+          "rows": [
+            ["Project-scoped participant ID","Link approved programme records","Included"],
+            ["Level","Approved comparison","Included"],
+            ["Academic results band","Programme evaluation","Included"],
+            ["Names and detailed marks","Not necessary for purpose","Excluded"]
           ],
-          primaryLabel: 'Submit for approval',
+          "primaryLabel": "Submit for approval"
         },
         {
-          kind: 'progress',
-          title: 'Partner access ready',
-          subtitle: 'Example Programme Partner',
-          tasks: [
-            ['Purpose approved', 'Programme owner'],
-            ['Data minimisation reviewed', '3 approved fields'],
-            ['Partner identity verified', 'Organisation account active'],
-            ['Secure delivery enabled', 'Access expires automatically in 6 months'],
+          "kind": "progress",
+          "title": "Partner access ready",
+          "subtitle": "Example Programme Partner",
+          "tasks": [
+            ["Purpose approved","Programme owner"],
+            ["Data minimisation reviewed","3 approved fields"],
+            ["Partner identity verified","Organisation account active"],
+            ["Secure delivery enabled","Access expires automatically in 6 months"]
           ],
-          summary: [['Approved fields', '3'], ['Expiry', '180 days'], ['Audit logging', 'On']],
+          "summary": [
+            ["Approved fields","3"],
+            ["Expiry","180 days"],
+            ["Audit logging","On"]
+          ],
+          "primaryLabel": "Open approved subset"
         },
-      ],
+        {
+          "kind": "controlled",
+          "title": "Your approved controlled subset",
+          "subtitle": "Synthetic aggregate result within MOE boundaries; descriptive association only.",
+          "metrics": [
+            ["Participant change","+4 pp"],
+            ["Comparison cohort","+1 pp"],
+            ["Raw exports","0"]
+          ],
+          "controls": [
+            ["Purpose","Approved academic programme evaluation"],
+            ["Masking","Direct identifiers removed"],
+            ["Aggregation","Groups of at least 10"],
+            ["Pseudonymisation","Project-scoped IDs only inside MOE"],
+            ["Expiry","180 days; automatic denial after expiry"],
+            ["Export","Raw records disabled"],
+            ["Audit","Every interaction logged"]
+          ],
+          "academic": true
+        }
+      ]
     },
-    7: {
-      entryLabel: 'Start from an approved project',
-      screens: [
+    "7": {
+      "entryLabel": "Start from an approved project",
+      "screens": [
         {
-          kind: 'projects',
-          title: 'Partner projects',
-          subtitle: 'Approved MOE data-sharing workspaces.',
-          projects: [
-            ['Student Support Programme', 'Active project', 'Monthly programme evaluation workspace.', '45 days to review'],
-            ['Research collaboration', 'Pending', 'Awaiting MOE purpose approval.', 'Pending'],
-            ['Example Programme Partner', 'Organisation', 'Verified organisation profile.', 'Verified'],
+          "kind": "projects",
+          "title": "Partner projects",
+          "subtitle": "Approved MOE data-sharing workspaces.",
+          "projects": [
+            ["Student Support Programme","Active project","Monthly programme evaluation workspace.","45 days to review"],
+            ["Research collaboration","Pending","Awaiting MOE purpose approval.","Pending"],
+            ["Example Programme Partner","Organisation","Verified organisation profile.","Verified"]
           ],
-          primaryLabel: 'Open Student Support Programme',
+          "primaryLabel": "Open Student Support Programme"
         },
         {
-          kind: 'intent',
-          eyebrow: 'Project setup',
-          title: 'What does this project need to achieve?',
-          subtitle: 'Edu Hub will recommend the minimum secure data interaction for the approved outcome.',
-          prompt: 'We need to identify programme participants and receive a monthly attendance indicator for programme evaluation.',
-          suggestions: ['Reuse existing agreement', 'Use synthetic test data', 'Avoid local downloads'],
-          primaryLabel: 'Design access',
+          "kind": "intent",
+          "title": "What does your approved project need?",
+          "eyebrow": "Academic Results",
+          "prompt": "We need to evaluate academic outcomes for programme participants.",
+          "primaryLabel": "Recommend project package",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'plan',
-          title: 'Recommended project workspace',
-          subtitle: 'Designed to meet the purpose with less raw data exposure.',
-          rows: [
-            ['Identity', 'Pseudonymous participant list', 'No unnecessary direct identifiers', 'Required'],
-            ['Outcome data', 'Monthly attendance indicator', 'Aggregated instead of daily raw records', 'Required'],
-            ['Development', 'Synthetic test file', 'Available before production access', 'Available'],
-            ['Access', 'Secure partner workspace', 'Avoid local raw-data downloads', 'Recommended'],
+          "kind": "plan",
+          "title": "Recommended project package",
+          "subtitle": "Review the proposed starting point before proceeding.",
+          "rows": [
+            ["Package","Results bands + level","Minimum useful approved subset","Recommended"],
+            ["Sample","Synthetic test records","Prepare without exposing student data","Included"],
+            ["Workspace","MOE controlled environment","Sponsor, purpose and expiry stay attached","Ready"]
           ],
-          checks: [['Purpose', 'Programme evaluation'], ['Expiry', '180 days'], ['Audit', 'Enabled']],
-          primaryLabel: 'Provision workspace',
+          "checks": [
+            ["Scope","Authorised HQ"],
+            ["Delayed submissions","2 excluded"]
+          ],
+          "primaryLabel": "Open secure workspace"
         },
         {
-          kind: 'controlled',
-          title: 'Project workspace',
-          subtitle: 'Student Support Programme',
-          metrics: [['Approved data views', '2'], ['Secure workspace', '1'], ['Days to expiry', '164']],
-          chart: 'monthly',
-          controls: [['Purpose bound', 'Programme evaluation only'], ['Audit', 'All activity logged'], ['Downloads', 'Restricted to approved outputs']],
-        },
-      ],
+          "kind": "controlled",
+          "title": "Approved programme comparison",
+          "subtitle": "Synthetic aggregate result within MOE boundaries; descriptive association only.",
+          "metrics": [
+            ["Participant change","+4 pp"],
+            ["Comparison cohort","+1 pp"],
+            ["Raw exports","0"]
+          ],
+          "controls": [
+            ["Purpose","Approved academic programme evaluation"],
+            ["Masking","Direct identifiers removed"],
+            ["Aggregation","Groups of at least 10"],
+            ["Pseudonymisation","Project-scoped IDs only inside MOE"],
+            ["Expiry","180 days; automatic denial after expiry"],
+            ["Export","Raw records disabled"],
+            ["Audit","Every interaction logged"]
+          ],
+          "academic": true
+        }
+      ]
     },
-    9: {
-      entryLabel: 'State the approved outcome',
-      screens: [
+    "9": {
+      "entryLabel": "Describe the evaluation outcome",
+      "screens": [
         {
-          kind: 'intent',
-          eyebrow: 'Data minimisation assistant',
-          title: 'What outcome does the project need?',
-          subtitle: 'Edu Hub will propose the least data needed to achieve the approved purpose.',
-          prompt: 'Evaluate whether the programme improves attendance among participating students without needing detailed daily records.',
-          suggestions: ['Use monthly metrics', 'Remove direct identifiers', 'Keep work inside MOE'],
-          primaryLabel: 'Propose data interaction',
+          "kind": "intent",
+          "title": "What outcome does the project need?",
+          "eyebrow": "Academic Results",
+          "prompt": "Evaluate whether a programme improves academic outcomes.",
+          "primaryLabel": "Propose minimum interaction",
+          "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },
         {
-          kind: 'plan',
-          title: 'Minimum sufficient data interaction',
-          subtitle: 'Review the proposed safeguards.',
-          rows: [
-            ['Identity', 'Pseudonymous participant key', 'Direct identifiers removed', 'Minimised'],
-            ['Attendance', 'Monthly attendance rate', 'Daily raw records not required', 'Aggregated'],
-            ['Comparison', 'Approved aggregate cohort', 'Supports evaluation purpose', 'Approved'],
-            ['Excluded', 'Counselling notes, offence details, full identifiers', 'Not needed for purpose', 'Excluded'],
+          "kind": "plan",
+          "title": "Minimum sufficient Results interaction",
+          "subtitle": "Review the proposed starting point before proceeding.",
+          "rows": [
+            ["Decision","Aggregate comparison is sufficient","Detailed raw student results are not needed","Recommended"],
+            ["Purpose","Approved academic programme evaluation","Enforced for this approved project","Governed"],
+            ["Masking","Direct identifiers removed","Enforced for this approved project","Governed"],
+            ["Aggregation","Groups of at least 10","Enforced for this approved project","Governed"],
+            ["Pseudonymisation","Project-scoped IDs only inside MOE","Enforced for this approved project","Governed"],
+            ["Expiry","180 days; automatic denial after expiry","Enforced for this approved project","Governed"],
+            ["Export","Raw records disabled","Enforced for this approved project","Governed"],
+            ["Audit","Every interaction logged","Enforced for this approved project","Governed"]
           ],
-          checks: [['De-identification', 'Applied'], ['Raw export', 'Disabled'], ['Expiry', 'Project end']],
-          primaryLabel: 'Create controlled workspace',
-        },
-        {
-          kind: 'controlled',
-          title: 'Controlled evaluation workspace',
-          subtitle: 'Student Support Programme',
-          metrics: [['Participants', '842'], ['Approved fields', '5'], ['Raw downloads', '0'], ['Days remaining', '164']],
-          chart: 'monthly',
-          controls: [['Purpose bound', 'Programme evaluation only'], ['Audit', 'All queries logged'], ['Export', 'Raw export disabled']],
-        },
-      ],
-    },
-    11: {
-      entryLabel: 'Ask for the approved outcome',
-      screens: [
-        {
-          kind: 'intent',
-          eyebrow: 'Purpose-bound analysis',
-          title: 'What approved outcome do you need?',
-          subtitle: 'Edu Hub will choose the least-exposing interaction that can satisfy it.',
-          prompt: 'We need to evaluate whether programme participation is associated with improved attendance over six months.',
-          suggestions: ['Avoid raw exports', 'Use controlled comparison', 'Keep identifiers pseudonymous'],
-          primaryLabel: 'Create evaluation',
-        },
-        {
-          kind: 'answer',
-          title: 'Programme evaluation',
-          headline: 'A controlled comparison is sufficient for the approved outcome',
-          body: 'Edu Hub can provide a secure comparison environment using pseudonymous participants, monthly attendance metrics and an approved aggregate comparison cohort. Daily raw attendance and direct identifiers do not need to leave MOE.',
-          metrics: [['Raw exports', '0'], ['Approved measures', '3'], ['Expiry', '180d']],
-          chart: 'monthly',
-          evidence: [
-            ['Direct identifiers', 'Excluded'],
-            ['Daily raw attendance', 'Not exposed'],
-            ['Purpose', 'Bound to programme evaluation'],
-            ['Audit', 'Every query logged'],
+          "checks": [
+            ["Scope","Authorised HQ"],
+            ["Delayed submissions","2 excluded"]
           ],
-          primaryLabel: 'Open controlled analysis',
+          "primaryLabel": "Open controlled comparison"
         },
         {
-          kind: 'controlled',
-          title: 'Controlled analysis',
-          subtitle: 'Only the approved evaluation interaction is available.',
-          metrics: [['Participant change', '+1.4 pp'], ['Comparison cohort', '+0.3 pp'], ['Raw record access', 'None']],
-          chart: 'monthly',
-          controls: [['Purpose', 'Programme evaluation'], ['Expiry', '180 days'], ['Export', 'Disabled'], ['Audit', 'Complete']],
-        },
-      ],
+          "kind": "controlled",
+          "title": "Approved programme comparison",
+          "subtitle": "Synthetic aggregate result within MOE boundaries; descriptive association only.",
+          "metrics": [
+            ["Participant change","+4 pp"],
+            ["Comparison cohort","+1 pp"],
+            ["Raw exports","0"]
+          ],
+          "controls": [
+            ["Purpose","Approved academic programme evaluation"],
+            ["Masking","Direct identifiers removed"],
+            ["Aggregation","Groups of at least 10"],
+            ["Pseudonymisation","Project-scoped IDs only inside MOE"],
+            ["Expiry","180 days; automatic denial after expiry"],
+            ["Export","Raw records disabled"],
+            ["Audit","Every interaction logged"]
+          ],
+          "academic": true
+        }
+      ]
     },
-  },
+    "11": {
+      "entryLabel": "View approved outcome",
+      "screens": [
+        {
+          "kind": "partnerOutcome",
+          "title": "Your approved evaluation is ready",
+          "subtitle": "Student Support Programme · Approved purpose and MOE sponsor · 180-day entitlement",
+          "primaryLabel": "Inspect evidence and controls"
+        },
+        {
+          "kind": "controlled",
+          "title": "Approved programme comparison",
+          "subtitle": "Synthetic aggregate result within MOE boundaries; descriptive association only.",
+          "metrics": [
+            ["Participant change","+4 pp"],
+            ["Comparison cohort","+1 pp"],
+            ["Raw exports","0"]
+          ],
+          "controls": [
+            ["Purpose","Approved academic programme evaluation"],
+            ["Masking","Direct identifiers removed"],
+            ["Aggregation","Groups of at least 10"],
+            ["Pseudonymisation","Project-scoped IDs only inside MOE"],
+            ["Expiry","180 days; automatic denial after expiry"],
+            ["Export","Raw records disabled"],
+            ["Audit","Every interaction logged"]
+          ],
+          "academic": true
+        }
+      ]
+    }
+  }
 }
 
 export const personaMeta = {
-  analyst: {
-    label: 'Analyst',
-    role: 'HQ Analyst',
-    nav: ['Home', 'Data products', 'Analytics', 'Workspace', 'Data requests'],
-    search: 'Search data, notebooks, dashboards and more…',
+  "analyst": {
+    "label": "Analyst",
+    "role": "HQ Analyst",
+    "nav": ["Home","Data products","Analytics","Workspace","Data requests"],
+    "search": "Search data, notebooks, dashboards and more…"
   },
-  business: {
-    label: 'Business',
-    role: 'Business Officer',
-    nav: ['Home', 'Insights', 'Dashboards', 'Ask Edu Hub', 'Saved views'],
-    search: 'Search dashboards, insights and business terms…',
+  "business": {
+    "label": "Business",
+    "role": "Business Officer",
+    "nav": ["Home","Insights","Dashboards","Ask Edu Hub","Saved views"],
+    "search": "Search dashboards, insights and business terms…"
   },
-  system: {
-    label: 'System',
-    role: 'Application Developer',
-    nav: ['Home', 'Data products', 'Developer', 'Consumers', 'Subscriptions'],
-    search: 'Search contracts, APIs, consumers and subscriptions…',
+  "system": {
+    "label": "System",
+    "role": "Application Developer",
+    "nav": ["Home","Data products","Developer","Consumers","Subscriptions"],
+    "search": "Search contracts, APIs, consumers and subscriptions…"
   },
-  partner: {
-    label: 'External partner',
-    role: 'External Partner',
-    nav: ['Home', 'Projects', 'Secure workspace', 'Agreements', 'Support'],
-    search: 'Search approved projects and workspaces…',
-  },
+  "partner": {
+    "label": "External partner",
+    "role": "External Partner",
+    "nav": ["Home","Projects","Secure workspace","Agreements","Support"],
+    "search": "Search approved projects and workspaces…"
+  }
 }

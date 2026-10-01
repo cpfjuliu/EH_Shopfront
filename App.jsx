@@ -1,6 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { experienceFlows, personaMeta } from './experienceFlows.js'
-import { chartData, dashboards, dataProducts, governanceBackstage, metrics, notifications, recentItems, userProfiles } from './mockData.js'
+import { chartData, dataProducts, governanceBackstage, notifications, recentItems, userProfiles } from './mockData.js'
+
+import { Briefing, BusinessAnswer, ContractTests, PartnerOutcome, ResultsDashboard, ResultsEvidence } from './ResultsExperience.jsx'
+import { levelDescriptions, questions, resultsContext, reproducibleSQL } from './resultsModel.js'
 
 const stars = [5, 7, 9, 11]
 const personas = ['analyst', 'business', 'system', 'partner']
@@ -32,8 +35,8 @@ function Icon({ name, size = 16 }) {
 
 function statusTone(value = '') {
   const v = String(value).toLowerCase()
-  if (/(healthy|ready|granted|approved|pass|current|enabled|included|verified|certified|supported|none|complete|stable|on|allowed|available|monitored|monitoring)/.test(v)) return 'success'
   if (/(warning|pending|provisional|approval|delayed|review|164|45 days)/.test(v)) return 'warning'
+  if (/(healthy|ready|granted|approved|pass|current|enabled|included|verified|certified|supported|none|complete|stable|on|allowed|available|monitored|monitoring)/.test(v)) return 'success'
   if (/(excluded|disabled|restricted|sensitive)/.test(v)) return 'muted'
   if (/(recommended|interpreted|governed|sdp|2 sdps)/.test(v)) return 'purple'
   return 'neutral'
@@ -44,7 +47,7 @@ function Badge({ children, tone }) {
 }
 
 function Button({ children, onClick, kind = 'secondary', disabled = false, icon }) {
-  return <button className={`button button-${kind}`} onClick={onClick} disabled={disabled}>{icon ? <Icon name={icon} size={14}/> : null}{children}</button>
+  return <button className={`button button-${kind}`} onClick={onClick} disabled={disabled || !onClick} title={!onClick ? 'Not available in this prototype' : undefined}>{icon ? <Icon name={icon} size={14}/> : null}{children}</button>
 }
 
 function Login({ onLogin }) {
@@ -66,9 +69,9 @@ function Login({ onLogin }) {
         </div>
         <div className="login-visual" aria-hidden="true">
           <div className="visual-stack">
-            <div className="visual-row"><span>Student Attendance</span><Badge tone="success">Healthy</Badge></div>
+            <div className="visual-row"><span>Student Academic Results</span><Badge tone="warning">2 delayed submissions</Badge></div>
             <div className="visual-row"><span>Student Identity</span><Badge tone="success">Healthy</Badge></div>
-            <div className="visual-row"><span>Frequent absence rate v3</span><Badge tone="purple">Governed</Badge></div>
+            <div className="visual-row"><span>Subject pass rate v1</span><Badge tone="purple">Governed</Badge></div>
           </div>
           <div className="visual-answer">
             <div className="visual-spark">✦</div>
@@ -97,7 +100,7 @@ function Sidebar({ persona, activeNav, onNav }) {
     <aside className="sidebar">
       <div className="nav-group">
         {nav.map((item) => (
-          <button key={item} className={`nav-item ${activeNav === item ? 'active' : ''}`} onClick={() => onNav(item)}>
+          <button key={item} aria-label={item} title={item} className={`nav-item ${activeNav === item ? 'active' : ''}`} onClick={() => onNav(item)}>
             <span className="nav-icon"><Icon name={iconFor(item)} /></span><span>{item}</span>
           </button>
         ))}
@@ -111,10 +114,10 @@ function Sidebar({ persona, activeNav, onNav }) {
   )
 }
 
-function Topbar({ persona, onSearch, onLogout }) {
+function Topbar({ persona, star, onSearch, onLogout }) {
   const profile = userProfiles[persona]
   const [open,setOpen] = useState(false)
-  const items = notifications[persona] || []
+  const items = (notifications[persona] || []).filter(item => star === 11 || item[0] !== 'Briefing')
   return (
     <header className="topbar">
       <div className="brand"><div className="brand-mark">EH</div><span>Edu Hub</span></div>
@@ -160,11 +163,11 @@ function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBacksta
 function SearchOverlay({ persona, onClose, onPick }) {
   const [query, setQuery] = useState('')
   const all = [
-    ['Data product', 'Student Attendance', 'Daily attendance, absence categories and latecoming', 'Data products'],
+    ['Data product', 'Student Academic Results', 'Final results by subject, level, school and year', 'Data products'],
     ['Data product', 'Student Identity', 'Core student identity and enrolment context', 'Data products'],
-    ['Dashboard', 'Student Attendance Overview', 'School and cohort attendance trends', persona === 'business' ? 'Dashboards' : 'Analytics'],
-    ['Metric', 'Frequent absence rate v3', 'Students absent on ≥10% of instructional days · prototype governed measure', persona === 'system' ? 'Data products' : 'Analytics'],
-    ['Workspace', 'Frequent student absence analysis', 'Recent analysis workspace', persona === 'partner' ? 'Secure workspace' : 'Workspace'],
+    ['Dashboard', 'Student Academic Results', 'Subject pass rates and year-on-year changes', persona === 'business' ? 'Dashboards' : 'Analytics'],
+    ['Metric', 'Subject pass rate v1', 'Students meeting the subject pass standard · governed definition', persona === 'system' ? 'Data products' : 'Analytics'],
+    ['Workspace', 'Academic Results analysis', 'Recent analysis workspace', persona === 'partner' ? 'Secure workspace' : 'Workspace'],
   ]
   const results = all.filter(x => x.join(' ').toLowerCase().includes(query.toLowerCase()))
   return <div className="overlay" onMouseDown={onClose}><div className="search-dialog" onMouseDown={e => e.stopPropagation()}>
@@ -198,8 +201,8 @@ function ActionRow({ screen, onNext, onBack, atEnd, loading }) {
 function HomeContext({ persona, star, onStart }) {
   const flow = experienceFlows[persona][star]
   const profile = userProfiles[persona]
-  const items = recentItems[persona]
-  const notice = notifications[persona]?.[0]
+  const items = recentItems[persona].filter(item => star === 11 || item[0] !== 'Briefing')
+  const notice = (notifications[persona] || []).find(item => star === 11 || item[0] !== 'Briefing')
   const intro = {
     analyst: ['Analyse with trusted data', 'Start with trusted data or describe the analysis you are trying to perform. Your workspaces, approvals and definitions stay with you.'],
     business: ['Get to the answer', 'Use trusted dashboards, briefings and governed business questions without navigating technical datasets.'],
@@ -215,15 +218,15 @@ function HomeContext({ persona, star, onStart }) {
   return <div className="home-content">
     <PageHeader title={`Good evening, ${profile.name.split(' ')[0]}`} subtitle={profile.context} />
     <section className="home-hero">
-      <div><div className="eyebrow">{star}★ EXPERIENCE</div><h2>{intro[0]}</h2><p>{intro[1]}</p></div>
+      <div><div className="eyebrow">{personaMeta[persona].role}</div><h2>{intro[0]}</h2><p>{levelDescriptions[star][1]}</p></div>
       <Button kind="primary" onClick={onStart} icon="spark">{flow.entryLabel}</Button>
     </section>
-    {notice && <div className={`attention-banner ${notice[3] || 'neutral'}`}><div className="attention-icon">{notice[3]==='warning'?'!':'✓'}</div><div><strong>{notice[1]}</strong><span>{notice[2]}</span></div><Button>View</Button></div>}
+    {notice && <div className={`attention-banner ${notice[3] || 'neutral'}`}><div className="attention-icon">{notice[3]==='warning'?'!':'✓'}</div><div><strong>{notice[1]}</strong><span>{notice[2]}</span></div><Button onClick={onStart}>View</Button></div>}
     <div className="home-section-title">Recently used</div>
     <div className="recent-grid">{items.map(([type,name,status]) => <button className="recent-card" key={name} onClick={onStart}><div className="recent-type">{type}</div><strong>{name}</strong><span>{status}</span></button>)}</div>
     <div className="home-grid home-grid-3">
       <div className="home-panel"><div className="panel-title">My Edu Hub</div>{continuity.map(([label,value])=><div className="activity-row" key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>
-      <div className="home-panel"><div className="panel-title">Platform status</div><div className="status-line"><span className="status-dot ok"/>Certified data products operating normally</div><div className="status-line"><span className="status-dot warn"/>2 attendance source feeds delayed</div><div className="status-line"><span className="status-dot ok"/>Access services operating normally</div></div>
+      <div className="home-panel"><div className="panel-title">Platform status</div><div className="status-line"><span className="status-dot ok"/>Certified data products operating normally</div><div className="status-line"><span className="status-dot warn"/>2 Results submissions delayed</div><div className="status-line"><span className="status-dot ok"/>Access services operating normally</div></div>
       <div className="home-panel"><div className="panel-title">Trust by default</div><div className="status-line"><Icon name="shield" size={13}/><span>Definitions, lineage and quality stay attached to use</span></div><div className="status-line"><Icon name="refresh" size={13}/><span>Changes are versioned and consumer impact checked</span></div><div className="status-line"><Icon name="check" size={13}/><span>Purpose and permissions are applied throughout</span></div></div>
     </div>
   </div>
@@ -245,13 +248,15 @@ function CatalogScreen({ screen, onNext }) {
 function AssetScreen({ screen, onNext, onBack }) {
   const p = dataProducts[screen.productId]
   const [tab,setTab] = useState('Overview')
+  const [sampleSQL,setSampleSQL] = useState(false)
   const tabs = ['Overview','Schema','Delivery','Versions','Consumers','Lineage','Quality','Access']
-  return <div className="page-content"><PageHeader title={p.name} subtitle={p.description} breadcrumbs={['Catalog','Student',p.name]} actions={<><Button>{screen.secondaryLabel || 'Open in SQL'}</Button><Button kind="primary" onClick={onNext}>{screen.primaryLabel || 'Request access'}</Button></>} />
+  return <div className="page-content"><PageHeader title={p.name} subtitle={p.description} breadcrumbs={['Catalog','Student',p.name]} actions={<><Button onClick={()=>setSampleSQL(v=>!v)}>{sampleSQL ? 'Hide sample SQL' : screen.secondaryLabel || 'Open in SQL'}</Button><Button kind="primary" onClick={onNext}>{screen.primaryLabel || 'Request access'}</Button></>} />
     <div className="badge-row"><Badge tone="purple">{p.type}</Badge><Badge>{p.lifecycle}</Badge><Badge>{p.version}</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge></div>
     <div className="trust-banner"><div className="trust-icon"><Icon name="shield" size={18}/></div><div><strong>Trusted product</strong><span>Authoritative: {p.authoritative} · Last validated {p.lastValidated} · Changes are versioned and assessed against registered consumers.</span></div><Badge tone="success">Certified</Badge></div>
     <div className="meta-grid"><Meta label="Owner" value={p.owner}/><Meta label="Freshness" value={p.freshness}/><Meta label="Coverage" value={p.coverage}/><Meta label="Quality" value={p.quality}/></div>
     <div className="tabs scroll-tabs">{tabs.map(t => <button key={t} className={tab===t?'active':''} onClick={() => setTab(t)}>{t}</button>)}</div>
     <ProductTabContent p={p} tab={tab}/>
+    {sampleSQL && <pre className="dev-code">{reproducibleSQL}</pre>}
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
 }
@@ -259,9 +264,9 @@ function AssetScreen({ screen, onNext, onBack }) {
 function ProductTabContent({ p, tab }) {
   if (tab === 'Overview') return <div className="asset-layout"><div>
     <h3>What this product is for</h3><p className="body-copy">{p.definition}</p>
-    <h3 className="section-title">Sample data</h3><SimpleTable columns={p.fields.slice(0,5).map(f=>f[0])} rows={p.sampleRows}/>
+    <h3 className="section-title">Sample data</h3><SimpleTable columns={p.fields.slice(0,p.sampleRows[0]?.length || 5).map(f=>f[0])} rows={p.sampleRows}/>
   </div><aside className="asset-aside"><Info label="Lifecycle" value={`${p.lifecycle} · ${p.version}`}/><Info label="Data steward" value={p.steward}/><Info label="Source" value={p.source}/><Info label="Approved use" value={p.allowedUse}/><Info label="Recommended join" value={p.id === 'attendance' ? 'Student Identity on student_id' : 'Use governed identifiers'}/></aside></div>
-  if (tab === 'Schema') return <div className="product-tab"><div className="tab-intro"><div><h3>Schema</h3><p>Contracted fields with classification and validation expectations.</p></div><Badge>{p.version}</Badge></div><SimpleTable columns={['Field','Type','Description','Classification','Rule']} rows={p.fields}/><h3 className="section-title">Masked sample rows</h3><SimpleTable columns={p.fields.slice(0,5).map(f=>f[0])} rows={p.sampleRows}/></div>
+  if (tab === 'Schema') return <div className="product-tab"><div className="tab-intro"><div><h3>Schema</h3><p>Contracted fields with classification and validation expectations.</p></div><Badge>{p.version}</Badge></div><SimpleTable columns={['Field','Type','Description','Classification','Rule']} rows={p.fields}/><h3 className="section-title">Masked sample rows</h3><SimpleTable columns={p.fields.slice(0,p.sampleRows[0]?.length || 5).map(f=>f[0])} rows={p.sampleRows}/></div>
   if (tab === 'Delivery') return <div className="product-tab"><div className="tab-intro"><div><h3>Delivery</h3><p>Supported consumption routes are part of the product contract, not ad-hoc integration choices.</p></div><Badge tone="success">Monitored</Badge></div><SimpleTable columns={['Route','Interface','Cadence','Intended consumers','Commitment']} rows={p.deliveries}/></div>
   if (tab === 'Versions') return <div className="product-tab"><div className="tab-intro"><div><h3>Versions</h3><p>Consumers can see what changed, what remains supported and when action is required.</p></div><Badge>{p.lifecycle}</Badge></div><SimpleTable columns={['Version','Status','Released','Change','Supported until']} rows={p.versions}/></div>
   if (tab === 'Consumers') return <div className="product-tab"><div className="tab-intro"><div><h3>Registered consumers</h3><p>Knowing who depends on the product lets Edu Hub assess impact before changes are released.</p></div><Badge>{p.consumers.length} consumers</Badge></div><SimpleTable columns={['Consumer','Route','Contract','Environment','Last activity']} rows={p.consumers}/></div>
@@ -282,21 +287,22 @@ function FormScreen({ screen, onNext, onBack }) {
   </div>
 }
 
-function IntentScreen({ screen, onNext, onBack, loading }) {
+function IntentScreen({ screen, onNext, onBack, loading, onQuestion }) {
   const [prompt,setPrompt] = useState(screen.prompt)
   return <div className="page-content intent-page"><PageHeader title="Home" />
     <div className="intent-card"><div className="intent-eyebrow"><span className="spark-icon">✦</span>{screen.eyebrow}</div><h2>{screen.title}</h2><p>{screen.subtitle}</p>
-      <div className="prompt-box"><textarea value={prompt} onChange={e=>setPrompt(e.target.value)}/><div className="prompt-footer"><span>Uses approved data, policy and shared definitions</span><Button kind="primary" onClick={onNext} disabled={loading}>{loading ? 'Preparing…' : screen.primaryLabel}</Button></div></div>
+      <div className="prompt-box"><textarea aria-label={screen.title} value={prompt} onChange={e=>setPrompt(e.target.value)}/><div className="prompt-footer"><span>Uses approved data, policy and shared definitions</span><Button kind="primary" onClick={() => { if (screen.businessQuestion) onQuestion(prompt.trim()); onNext() }} disabled={loading || !prompt.trim()}>{loading ? 'Preparing…' : screen.primaryLabel}</Button></div></div>
       <div className="suggestion-row">{screen.suggestions?.map(s => <button key={s} onClick={() => setPrompt(s)}>{s}</button>)}</div>
     </div>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
 }
 
-function PlanScreen({ screen, onNext, onBack }) {
+function PlanScreen({ screen, onNext, onBack, analysisLevel, onAnalysisLevel }) {
   const hasFrequent = JSON.stringify(screen.rows).toLowerCase().includes('frequent absence')
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub',screen.title]} />
-    {hasFrequent && <div className="definition-callout"><div><strong>Frequent absence rate</strong><span>{metrics.frequentAbsence.description}</span></div><Button>Definition details</Button></div>}
+    {hasFrequent && <div className="definition-callout"><div><strong>Subject pass rate</strong><span>{resultsContext.definition}</span></div><Button>Definition details</Button></div>}
+    {screen.editable && <label className="form-field">Override analysis level<select value={analysisLevel} onChange={e=>onAnalysisLevel(e.target.value)}><option>All levels</option><option>Secondary 1</option><option>Secondary 2</option></select><small>Your selection is carried into the generated SQL. Review cohort changes before attributing causes.</small></label>}
     <div className="plan-layout"><div className="plan-table">{screen.rows.map(([label,value,note,status]) => <div className="plan-row" key={label+value}><div className="plan-label">{label}</div><div><strong>{value}</strong><span>{note}</span></div><Badge>{status}</Badge></div>)}</div>
     <aside className="summary-panel"><h3>Review</h3>{screen.checks?.map(([label,value]) => <div className="summary-line" key={label}><span>{label}</span><Badge>{value}</Badge></div>)}</aside></div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
@@ -304,7 +310,7 @@ function PlanScreen({ screen, onNext, onBack }) {
 }
 
 function ProgressScreen({ screen, onNext, onBack, loading }) {
-  const [done,setDone] = useState(Math.min(2, screen.tasks.length))
+  const [done,setDone] = useState(screen.primaryLabel ? Math.min(2, screen.tasks.length) : screen.tasks.length)
   useEffect(() => {
     if (done >= screen.tasks.length - 1) return
     const timer = setTimeout(() => setDone(d => d + 1), 650)
@@ -317,11 +323,18 @@ function ProgressScreen({ screen, onNext, onBack, loading }) {
   </div>
 }
 
-function WorkspaceScreen({ screen, onBack }) {
-  return <div className="page-content workspace-page"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Workspace',screen.title]} actions={<><Button>Share</Button><Button kind="primary">Run all</Button></>} />
+function WorkspaceScreen({ screen, onBack, analysisLevel = 'All levels' }) {
+  const generated = analysisLevel === 'All levels' ? screen.code : screen.code.replace("AND result_status = 'FINAL'", "AND result_status = 'FINAL'\n    AND level = '" + analysisLevel + "'")
+  const [code,setCode] = useState(generated)
+  const [run,setRun] = useState(!screen.manual)
+  const [message,setMessage] = useState('')
+  const [detail,setDetail] = useState(null)
+  const execute = () => { setRun(code === generated && !screen.manual); setMessage(code === generated && !screen.manual ? 'Synthetic preview refreshed. No database query was executed.' : 'SQL saved for review. This prototype has no SQL execution backend; edited queries cannot produce new results.') }
+
+  return <div className="page-content workspace-page"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Workspace',screen.title]} actions={<><Button>Share</Button><Button kind="primary" onClick={execute}>Run all</Button></>} />
     <TransparencyControls mode="analysis" />
-    <div className="editor-shell"><aside className="editor-left"><div className="editor-panel-head">Analysis assets <span>＋</span></div><button className="editor-file active">01_analysis.sql</button><button className="editor-file">02_breakdown.sql</button><button className="editor-file">Definitions</button><button className="editor-file">Lineage</button></aside>
-    <main className="editor-main"><div className="editor-toolbar"><Button kind="primary">Run</Button>{screen.badges?.map(b => <Badge key={b}>{b}</Badge>)}<span className="saved-state">Saved just now</span></div><pre className="code-editor">{screen.code}</pre><div className="editor-results">{screen.chart ? <BarChart name={screen.chart}/> : screen.resultRows ? <SimpleTable columns={screen.resultColumns} rows={screen.resultRows}/> : <div className="result-placeholder">Run the analysis to refresh results.</div>}</div></main>
+    <div className="editor-shell"><aside className="editor-left"><div className="editor-panel-head">Analysis assets <span>＋</span></div><button className="editor-file active">01_analysis.sql</button><button className="editor-file">02_breakdown.sql</button><button className="editor-file" onClick={()=>setDetail(detail==='definition'?null:'definition')}>Definitions</button><button className="editor-file" onClick={()=>setDetail(detail==='lineage'?null:'lineage')}>Lineage</button></aside>
+    <main className="editor-main">{detail && <div className="panel-card"><h3>{detail==='definition'?'Metric and assumptions':'Results lineage'}</h3><p>{detail==='definition'?resultsContext.definition+' '+resultsContext.methodology:'School Results System → finality, subject-code and duplicate validation → Student Academic Results v1.2 → authorised HQ workspace. Student Identity v1.8 supplies governed school and level context. Two delayed submissions are excluded.'}</p></div>}<div className="editor-toolbar"><Button kind="primary" onClick={execute}>Run</Button>{screen.badges?.map(b => <Badge key={b}>{b}</Badge>)}<span className="saved-state">Saved just now</span></div><label className="sql-label">Review and edit SQL<textarea className="code-editor sql-editor" value={code} onChange={e=>{setCode(e.target.value);setRun(false)}}/></label>{message && <p role="status">{message}</p>}<div className="editor-results">{!run ? <div className="result-placeholder">Write or review SQL, then select Run. Execution is simulated.</div> : analysisLevel !== 'All levels' ? <div className="result-placeholder">SQL scoped to {analysisLevel}. Review and execute in an approved workspace; no scoped result fixture is supplied.</div> : screen.chart ? <BarChart name={screen.chart}/> : screen.resultRows ? <SimpleTable columns={screen.resultColumns} rows={screen.resultRows}/> : <div className="result-placeholder">Run the analysis to refresh results.</div>}</div></main>
     <aside className="assistant-panel"><div className="editor-panel-head">Genie Code</div><div className="assistant-message">{screen.assistant}</div><div className="assistant-message user">Explain the assumptions behind this analysis.</div><div className="assistant-input">Ask about this analysis…</div></aside></div>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
@@ -338,12 +351,12 @@ function DiscoverScreen({ screen, onNext, onBack }) {
 }
 
 function DashboardDetail({ screen, onNext, onBack }) {
-  const d = dashboards.attendanceOverview
+  const d = {name:'Student Academic Results',owner:'Academic Data Domain',updated:'Today, 6:04 PM',definition:'Subject pass rate v1'}
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Analytics','Dashboards',d.name]} actions={<Button kind="primary" onClick={onNext}>{screen.primaryLabel}</Button>} />
     <div className="badge-row"><Badge tone="purple">Dashboard</Badge><Badge>Trusted</Badge><Badge>Daily</Badge></div>
     <div className="meta-grid"><Meta label="Owner" value={d.owner}/><Meta label="Updated" value={d.updated}/><Meta label="Audience" value="HQ officers"/><Meta label="Definition set" value={d.definition}/></div>
-    <div className="definition-callout"><div><strong>Frequent absence rate</strong><span>{metrics.frequentAbsence.description}</span></div><Badge tone="purple">{metrics.frequentAbsence.version}</Badge></div>
-    <div className="preview-card"><div className="preview-label">Preview</div><div className="metric-grid"><Metric label="Attendance rate" value="92.8%"/><Metric label="Students with frequent absence" value="4.7%"/><Metric label="Schools above threshold" value="12"/></div><BarChart name="monthly"/></div>
+    <div className="definition-callout"><div><strong>Subject pass rate</strong><span>{resultsContext.definition}</span></div><Badge tone="purple">{'v1'}</Badge></div>
+    <div className="preview-card"><div className="preview-label">Preview</div><div className="metric-grid"><Metric label="Mathematics pass rate" value="79.4%"/><Metric label="English pass rate" value="88.0%"/><Metric label="Current schools" value="8"/></div><p className="body-copy">Synthetic summary across comparable schools. Apply filters in the dashboard.</p></div>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
 }
@@ -353,7 +366,7 @@ function Metric({label,value}) { return <div className="metric-card"><span>{labe
 function DashboardScreen({ screen, onBack }) {
   const mentionsFrequent = JSON.stringify(screen).toLowerCase().includes('frequent absence')
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Analytics',screen.title]} actions={<><Button>Export</Button><Button>Share</Button></>} />
-    {mentionsFrequent && <div className="definition-callout"><div><strong>What “frequent absence” means here</strong><span>{metrics.frequentAbsence.description}</span></div><Button>View definition</Button></div>}
+    {mentionsFrequent && <div className="definition-callout"><div><strong>What “frequent absence” means here</strong><span>{resultsContext.definition}</span></div><Button>View definition</Button></div>}
     <div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>
     <div className="dashboard-layout"><div className="chart-card"><h3>Trend</h3><BarChart name={screen.chart}/></div><div className="table-card"><h3>Highlights</h3><SimpleTable columns={['Item','Change']} rows={screen.table}/></div></div>
     <ActionRow screen={{}} onBack={onBack}/>
@@ -367,18 +380,7 @@ function RecommendationsScreen({ screen, onNext, onBack }) {
   </div>
 }
 
-function TransparencyControls({ mode = 'answer' }) {
-  const [open,setOpen] = useState(null)
-  const content = {
-    why: mode === 'answer'
-      ? 'The result is based on the largest term-on-term change using a governed attendance measure, with delayed feeds prevented from being presented as current.'
-      : 'The analysis plan uses the minimum fields required for the question and a governed join between Student Attendance and Student Identity.',
-    data: 'Student Attendance v2.3 and Student Identity v1.8. Both are certified Standard Data Products with current lineage and quality status.',
-    assumptions: `Frequent absence rate uses the prototype rule: students absent on 10% or more instructional days in the selected period. Two delayed school feeds are excluded from strong current-period conclusions.`,
-  }
-  const buttons = [['why', mode === 'answer' ? 'Why this answer?' : 'Why this analysis?'],['data','What data was used?'],['assumptions','Show assumptions']]
-  return <div className="transparency-wrap"><div className="transparency-actions">{buttons.map(([key,label])=><button key={key} className={open===key?'active':''} onClick={()=>setOpen(open===key?null:key)}>{label}</button>)}</div>{open && <div className="transparency-drawer"><div><Icon name="shield" size={17}/></div><div><strong>{buttons.find(b=>b[0]===open)?.[1]}</strong><p>{content[open]}</p></div><button onClick={()=>setOpen(null)} aria-label="Close"><Icon name="close" size={14}/></button></div>}</div>
-}
+function TransparencyControls() { return <ResultsEvidence/> }
 
 function AnswerScreen({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} breadcrumbs={['Edu Hub',screen.title]} />
@@ -410,7 +412,7 @@ function ContractScreen({ screen, onNext, onBack }) {
     <div className="badge-row"><Badge tone="purple">API-ready</Badge><Badge>{p.lifecycle}</Badge><Badge>{p.version}</Badge><Badge>{p.trust}</Badge><Badge>{p.classification}</Badge></div>
     <div className="meta-grid"><Meta label="Freshness" value={p.freshness}/><Meta label="SLO" value="99.5% delivery"/><Meta label="Owner" value={p.owner}/><Meta label="Compatibility" value="Backward compatible within major version"/></div>
     <div className="tabs scroll-tabs">{tabs.map(t=><button key={t} className={tab===t?'active':''} onClick={()=>setTab(t)}>{t}</button>)}</div>
-    {tab === 'Contract' ? <div className="contract-overview"><div className="panel-card"><h3>Business contract</h3><div className="contract-key"><span>Product</span><strong>{p.name} {p.version}</strong></div><div className="contract-key"><span>Promise</span><strong>Stable attendance semantics independent of storage or platform implementation</strong></div><div className="contract-key"><span>Change policy</span><strong>Breaking changes require a new major version and consumer impact review</strong></div><div className="contract-key"><span>Freshness</span><strong>{p.freshness}</strong></div></div><aside className="summary-panel"><h3>Contract health</h3><div className="summary-line"><span>Registered consumers</span><strong>{p.consumers.length}</strong></div><div className="summary-line"><span>Latest quality</span><Badge>{p.quality}</Badge></div><div className="summary-line"><span>Last validated</span><strong>{p.lastValidated}</strong></div><div className="summary-line"><span>Lifecycle</span><Badge>{p.lifecycle}</Badge></div></aside></div> : <ProductTabContent p={p} tab={tab}/>} 
+    {tab === 'Contract' ? <div className="contract-overview"><div className="panel-card"><h3>Business contract</h3><div className="contract-key"><span>Product</span><strong>{p.name} {p.version}</strong></div><div className="contract-key"><span>Promise</span><strong>Stable academic results semantics independent of storage or platform implementation</strong></div><div className="contract-key"><span>Change policy</span><strong>Breaking changes require a new major version and consumer impact review</strong></div><div className="contract-key"><span>Freshness</span><strong>{p.freshness}</strong></div></div><aside className="summary-panel"><h3>Contract health</h3><div className="summary-line"><span>Registered consumers</span><strong>{p.consumers.length}</strong></div><div className="summary-line"><span>Latest quality</span><Badge>{p.quality}</Badge></div><div className="summary-line"><span>Last validated</span><strong>{p.lastValidated}</strong></div><div className="summary-line"><span>Lifecycle</span><Badge>{p.lifecycle}</Badge></div></aside></div> : <ProductTabContent p={p} tab={tab}/>}
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
 }
@@ -421,9 +423,11 @@ function ProjectsScreen({ screen, onNext, onBack }) {
 }
 
 function ControlledScreen({ screen, onBack }) {
+  const [entitlement,setEntitlement] = useState('Active')
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Partner access',screen.title]} />
-    <div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>
-    <div className="dashboard-layout"><div className="chart-card"><h3>Approved analysis</h3><BarChart name={screen.chart}/></div><aside className="evidence-panel"><h3>Workspace controls</h3>{screen.controls.map(([l,v])=><div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div><ActionRow screen={{}} onBack={onBack}/></div>
+    <details className="panel-card"><summary>Prototype access scenarios</summary><label className="form-field">Entitlement<select aria-label="Entitlement" value={entitlement} onChange={e=>setEntitlement(e.target.value)}><option>Active</option><option>Expired</option><option>Denied</option></select></label></details>
+    {entitlement === 'Active' ? <><div className="metric-grid metric-grid-4">{screen.metrics.map(([l,v]) => <Metric key={l} label={l} value={v}/>)}</div>
+    <div className="dashboard-layout"><div className="chart-card"><h3>Approved analysis</h3><p>Participant pass-rate change: +4 pp. Comparison cohort: +1 pp. Aggregate synthetic comparison; causal impact is not established.</p></div><aside className="evidence-panel"><h3>Workspace controls</h3>{screen.controls.map(([l,v])=><div className="evidence-row" key={l}><strong>{l}</strong><span>{v}</span></div>)}</aside></div></> : <div className="incident-banner" role="status"><strong>Access {entitlement.toLowerCase()}</strong><p>Results are unavailable. Your MOE sponsor must confirm the approved purpose and renew or approve entitlement before access resumes. No raw data or cached result is released.</p></div>}<ActionRow screen={{}} onBack={onBack}/></div>
 }
 
 function ConversationScreen({ screen, onBack }) {
@@ -465,6 +469,11 @@ function GovernanceScreen({ onBack }) {
 
 function renderScreen(screen, props) {
   const map = {
+    briefing: Briefing,
+    businessAnswer: BusinessAnswer,
+    resultsDashboard: ResultsDashboard,
+    partnerOutcome: PartnerOutcome,
+    contractTests: ContractTests,
     catalog: CatalogScreen,
     asset: AssetScreen,
     form: FormScreen,
@@ -504,20 +513,25 @@ function manualScreenFor(persona, label) {
   if (/secure workspace/i.test(label)) return experienceFlows.partner[9].screens[2]
   if (/agreement/i.test(label)) return { kind:'table', title:'Agreements', subtitle:'Data-sharing agreements for your organisation.', columns:['Agreement','Purpose','Status','Expiry'], rows:[['DSA-2041','Programme evaluation','Active','24 Mar 2027'],['DSA-1978','Research collaboration','Pending','—']] }
   if (/ask edu hub/i.test(label)) return experienceFlows.business[9].screens[0]
-  if (/saved views/i.test(label)) return { kind:'discover', title:'Saved views', subtitle:'Dashboards and insights you have saved.', search:'', items:[['Dashboard','Student Attendance Overview','School and cohort attendance trends.','Trusted'],['Explorer','Students Missing School Frequently','Saved business explorer with governed definition.','Trusted']] }
+  if (/saved views/i.test(label)) return { kind:'discover', title:'Saved views', subtitle:'Dashboards and insights you have saved.', search:'', items:[['Dashboard','Student Academic Results','Subject pass rates and year-on-year changes.','Trusted'],['Explorer','Academic Results leadership view','Prepared leadership view with governed definitions.','Trusted']] }
   return { kind:'table', title:label, subtitle:'Prototype module.', columns:['Item','Status'], rows:[['Example item','Available']] }
 }
 
 function App() {
   const [loggedIn,setLoggedIn] = useState(() => localStorage.getItem('eh_logged_in') === '1')
-  const [persona,setPersona] = useState(() => localStorage.getItem('eh_persona') || 'analyst')
-  const [star,setStar] = useState(() => Number(localStorage.getItem('eh_star')) || 7)
+  const [persona,setPersona] = useState(() => personas.includes(localStorage.getItem('eh_persona')) ? localStorage.getItem('eh_persona') : 'analyst')
+  const [star,setStar] = useState(() => stars.includes(Number(localStorage.getItem('eh_star'))) ? Number(localStorage.getItem('eh_star')) : 7)
   const [step,setStep] = useState(0)
   const [journey,setJourney] = useState(false)
   const [activeNav,setActiveNav] = useState('Home')
   const [manualView,setManualView] = useState(null)
   const [searchOpen,setSearchOpen] = useState(false)
   const [loading,setLoading] = useState(false)
+  const [question,setQuestion] = useState(questions[0])
+  const [analysisLevel,setAnalysisLevel] = useState('All levels')
+  const timer = useRef(null)
+  const cancelPending = () => { clearTimeout(timer.current); setLoading(false) }
+  useEffect(() => () => clearTimeout(timer.current), [])
 
   useEffect(() => { localStorage.setItem('eh_persona',persona) }, [persona])
   useEffect(() => { localStorage.setItem('eh_star',String(star)) }, [star])
@@ -530,26 +544,32 @@ function App() {
   const screen = flow.screens[step] || flow.screens[0]
 
   const login = () => { localStorage.setItem('eh_logged_in','1'); setLoggedIn(true) }
-  const logout = () => { localStorage.removeItem('eh_logged_in'); setLoggedIn(false); setJourney(false); setStep(0) }
-  const reset = () => { setStep(0); setJourney(false); setManualView(null); setActiveNav('Home') }
-  const changePersona = (p) => { setPersona(p); setStep(0); setJourney(false); setManualView(null); setActiveNav('Home') }
-  const changeStar = (s) => { setStar(s); setStep(0); setJourney(false); setManualView(null); setActiveNav('Home') }
-  const startJourney = () => { setJourney(true); setManualView(null); setStep(0); setActiveNav(personaMeta[persona].nav[0]) }
+  const logout = () => { reset(); localStorage.removeItem('eh_logged_in'); setLoggedIn(false); setJourney(false); setStep(0) }
+  const reset = () => { cancelPending(); setQuestion(questions[0]); setAnalysisLevel('All levels'); setSearchOpen(false); setStep(0); setJourney(false); setManualView(null); setActiveNav('Home') }
+  const changePersona = (p) => { reset(); setPersona(p) }
+  const changeStar = (s) => { reset(); setStar(s) }
+  const startJourney = () => { cancelPending(); setJourney(true); setManualView(null); setStep(0); setActiveNav(personaMeta[persona].nav[0]) }
   const next = () => {
     if (loading) return
+    setJourney(true)
     if (step >= flow.screens.length - 1) { setStep(0); setJourney(false); setActiveNav('Home'); return }
     const current = flow.screens[step]
     if (['intent','progress'].includes(current.kind)) {
       setLoading(true)
-      setTimeout(() => { setLoading(false); setStep(s => s + 1) }, current.kind === 'intent' ? 800 : 650)
+      timer.current = setTimeout(() => { setLoading(false); setStep(s => s + 1) }, current.kind === 'intent' ? 800 : 650)
     } else setStep(s => s + 1)
   }
   const back = () => {
+    cancelPending()
     if (manualView) { setManualView(null); setActiveNav('Home'); return }
     if (step > 0) setStep(s => s - 1)
     else { setJourney(false); setActiveNav('Home') }
   }
   const onNav = (label) => {
+    cancelPending()
+    if (label === 'Ask Edu Hub') { reset(); setStar(9); setJourney(true); setActiveNav(label); return }
+    const destination = { 'Data products': [persona === 'system' ? 'system' : 'analyst',5,0], 'Developer':['system',5,0], 'Consumers':['system',11,0], 'Subscriptions':['system',7,0], 'Projects':['partner',7,0], 'Data requests':['analyst',5,2] }[label]
+    if (destination && destination[0] === persona) { reset(); setStar(destination[1]); setStep(destination[2]); setJourney(true); setActiveNav(label); return }
     setActiveNav(label)
     const manual = manualScreenFor(persona,label)
     if (!manual) { setManualView(null); setJourney(false); setStep(0) }
@@ -559,13 +579,15 @@ function App() {
   if (!loggedIn) return <Login onLogin={login}/>
 
   return <div className="app-shell">
-    <Topbar persona={persona} onSearch={() => setSearchOpen(true)} onLogout={logout}/>
+    <Topbar key={`${persona}-${star}`} persona={persona} star={star} onSearch={() => setSearchOpen(true)} onLogout={logout}/>
     <Sidebar persona={persona} activeNav={activeNav} onNav={onNav}/>
     <main className="main-area">
-      {manualView ? renderScreen(manualView,{onNext:()=>{},onBack:back,loading:false}) : journey ? renderScreen(screen,{onNext:next,onBack:back,loading,atEnd:step===flow.screens.length-1}) : <HomeContext persona={persona} star={star} onStart={startJourney}/>} 
+      <React.Fragment key={`${persona}-${star}-${manualView?.title || (journey ? step : 'home')}`}>
+      {manualView ? renderScreen(manualView,{onNext:startJourney,onBack:back,loading:false,question,onQuestion:setQuestion,analysisLevel,onAnalysisLevel:setAnalysisLevel}) : journey || star === 11 ? renderScreen(screen,{onNext:next,onBack:back,loading,question,onQuestion:setQuestion,analysisLevel,onAnalysisLevel:setAnalysisLevel,atEnd:step===flow.screens.length-1}) : <HomeContext persona={persona} star={star} onStart={startJourney}/>}
+      </React.Fragment>
     </main>
     <PrototypeControl persona={persona} star={star} onPersona={changePersona} onStar={changeStar} onReset={reset} onBackstage={() => onNav('Governance')}/>
-    {searchOpen && <SearchOverlay persona={persona} onClose={() => setSearchOpen(false)} onPick={onNav}/>} 
+    {searchOpen && <SearchOverlay persona={persona} onClose={() => setSearchOpen(false)} onPick={onNav}/>}
   </div>
 }
 

@@ -1,41 +1,53 @@
 # Edu Hub Experience Vision Prototype
 
-Interactive React/Vite prototype for exploring 5★, 7★, 9★ and 11★ Edu Hub experiences across four consumer personas:
+React/Vite prototype demonstrating 16 role-aware journeys using **Student Academic Results**. All data, approvals, contracts and API responses are synthetic. No production SSO, SQL engine, AI service or policy enforcement backend is connected.
 
-- Analyst
-- Business user
-- System / application developer
-- External partner
+## Experience distinctions
 
-The prototype is intentionally backed by central mock data rather than separate static pages, so common product behaviour stays consistent across personas and star levels.
+| Persona | 5★ — self-service | 7★ — orchestrated | 9★ — reactive intent | 11★ — outcome first |
+| --- | --- | --- | --- | --- |
+| Business | Find a trusted Results dashboard; filter subject, year, level and school manually | State a leadership need; open a prepared comparison view | Ask Edu Hub; receive an answer, magnitude, evidence and caveats; ask follow-ups | Land on a personalised three-development Results briefing; explore drivers or subjects with context |
+| Analyst | Inspect SDP tabs, request access and write SQL | Describe the analysis; receive recommended products/joins and a workspace | Review method, override level, inspect delays and generate scoped SQL | Land on a refreshed analysis briefing; inspect SQL, definitions, lineage and assumptions |
+| System | Inspect a contract and integrate manually | Describe the application; coordinate identity, entitlement, sandbox and subscription | Review fields, freshness, fallback and versions; inspect scaffold and failure scenarios | See stable contract health first; inspect migration with zero consumer code changes |
+| Partner | Submit purpose, sponsor, duration and data request; receive a controlled subset | Describe the need; receive a minimum package, synthetic sample and workspace | Review minimisation, aggregation, masking, pseudonymisation and expiry | Receive an approved aggregate evaluation first; inspect controls without raw exports |
 
-## Revamp highlights
+11★ opens directly on the outcome. Lower levels retain their role-aware home and explicit starting action. The bottom-right persona/star selector is a separate presenter control.
 
-- Plain-language attendance scenario: "students missing school frequently" replaces the jargon-heavy "persistent absenteeism" wording.
-- Governed metric shown as **Frequent absence rate**, with a visible prototype definition: students absent on 10% or more instructional days in the selected period.
-- Fully populated Standard Data Product views for Schema, Delivery, Versions, Consumers, Lineage, Quality and Access.
-- Mock contract lifecycle, compatibility windows, registered consumers and delivery commitments.
-- Data-quality failure and recovery state for the analyst 9★ journey.
-- Trust and transparency controls: Why this answer, What data was used, Show assumptions.
-- Notifications and change-management signals.
-- Role-aware "My Edu Hub" continuity on the home page.
-- Data owner / governance backstage view, accessible from the sidebar or prototype control.
-- Product-health mock metrics for reuse, request-to-use time and contract protection.
+## Trust and limitations
 
-## Deploy to Vercel
+- Results SDP retains Overview, Schema, Delivery, Versions, Consumers, Lineage, Quality and Access tabs. Original Attendance and Identity product fixtures remain for reference.
+- Eight synthetic schools have comparable 2025–2026 results. School I/J submissions are delayed and excluded, never zero-filled. Business answers contain no student identifiers.
+- Pass rate is passes divided by valid final results; changes are percentage points. Fixture aggregates use equal school/cohort weights. Descriptive differences do not establish causation.
+- Business Q&A supports the visible example questions: calculation, current data, subject comparison, level drivers and School A. Other questions receive an explicit limitation instead of fabricated results. This is a deterministic prototype, not general-purpose AI.
+- SQL is editable and the supplied preview can be refreshed. Edited queries require an approved external workspace; the prototype does not execute them.
+- Contract scenarios simulate stale responses, expired entitlement and breaking changes. Partner expired/denied scenarios hide results. These are UI demonstrations, not security enforcement.
+- Data Owner/Governance backstage retains certification, incidents, lifecycle and consumer-impact checks.
+- Unimplemented placeholder operations are disabled. Vercel configuration is unchanged.
 
-Upload every file in this folder to the repository root. The project intentionally uses a flat structure so phone uploads are easier.
+## Run locally
 
-Vercel configuration is included in `vercel.json`:
+```sh
+npm ci
+npm run dev -- --host 127.0.0.1
+```
 
-- Install: `npm install --dangerously-allow-all-scripts`
-- Build: `npm run build`
-- Output: `dist`
+Build with `npm run build`; preview with `npm run preview`.
 
-Vercel should detect the Vite application automatically.
+## Browser verification
 
-## Demo control
+With the local server running:
 
-The bottom-right prototype control is intentionally not part of the proposed end-user product. It lets the presenter switch persona and experience level and open the governance backstage view.
+```sh
+npx playwright install chromium
+npm test
+```
 
-All data and metrics shown are synthetic prototype content and should not be treated as production MOE definitions or operational figures.
+Optional environment variables: `TEST_URL` (default `http://127.0.0.1:5173`) and `BROWSER_EXECUTABLE` (installed Chrome/Chromium executable). Screenshots go to ignored `test-results/`.
+
+The suite walks all 16 journeys and checks SDP tabs, manual/prepared filters, reactive Q&A, proactive briefings, context, analyst overrides, contract failures, partner expiry/denial, Back, sidebar Q&A, blank input, transition cancellation, mobile overflow, governance, logout and invalid stored preferences. Browser runtime and console errors fail the run.
+
+The existing Vite 5 toolchain is retained. `npm audit` reports two development-tool vulnerabilities (Vite/esbuild), requiring a separate toolchain upgrade. Keep the dev server on loopback. Production output is static.
+
+## Deployment
+
+Pushes to the linked GitHub branch trigger the existing Vercel integration. No new Vercel settings or environment variables are required.

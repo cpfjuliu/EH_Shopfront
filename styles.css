@@ -1,3 +1,7 @@
+.results-filters{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}.results-filters label{display:grid;gap:6px;font-size:12px;flex:1;min-width:140px}.results-filters select,.form-field select{padding:9px;border:1px solid var(--color-border);border-radius:6px;background:white;color:var(--color-text)}
+.results-table-wrap{overflow-x:auto;border:1px solid var(--color-border);border-radius:8px;background:white}.results-table{border-collapse:collapse;width:100%;font-size:12px}.results-table th,.results-table td{text-align:left;padding:12px;border-bottom:1px solid var(--color-border)}.results-table th{background:var(--color-surface-subtle)}
+.briefing-page{max-width:1000px;margin:auto}.briefing-card{margin-bottom:18px}.briefing-development{border-top:1px solid var(--color-border);padding:16px 0 0}.briefing-development strong{font-size:15px}.briefing-card .briefing-caveat{font-size:12px;color:var(--color-text-muted)}.briefing-actions{display:flex;gap:10px;flex-wrap:wrap}.evidence-detail{margin-top:10px}.evidence-detail p{font-size:12px;line-height:1.6}.question-compose{margin:20px 0}.question-compose>label{display:block;font-size:12px;font-weight:600;margin-bottom:8px}.question-compose>div{display:flex;gap:8px}.question-compose input{flex:1;min-width:0;padding:10px;border:1px solid var(--color-border);border-radius:6px}.sql-label{display:block;font-size:11px;padding:12px}.sql-editor{display:block;width:100%;min-height:350px;resize:vertical;border:1px solid var(--color-border);font-family:monospace}.answer-card .metric-grid:empty{display:none}button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--color-primary);outline-offset:3px}
+@media(max-width:780px){.question-compose>div{flex-wrap:wrap}.question-compose input{flex-basis:100%}.results-table th,.results-table td{padding:8px}.briefing-page .page-header{display:block}.briefing-card h2{font-size:22px}}
 :root{
   --space-1:8px;
   --space-2:16px;
@@ -172,6 +176,9 @@ kbd{font:inherit;font-size:10px;border:1px solid #526170;border-radius:4px;paddi
   .prompt-footer{align-items:flex-end;flex-direction:column}.prompt-footer .button{width:100%;justify-content:center}
   .prototype-popover{width:min(320px,calc(100vw - 32px))}
 }
+
+.editor-main{display:block}.editor-toolbar{min-height:44px;flex-wrap:wrap;padding:8px 10px}.sql-editor{min-height:350px}.briefing-page{max-width:1000px}
+@media(max-width:780px){.topbar{grid-template-columns:34px minmax(0,1fr) auto;gap:8px}.global-search{min-width:0}.global-search span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.top-actions{gap:4px}.top-actions>.icon-button:last-child{display:grid;flex-shrink:0}.profile-block{margin-left:0}.notification-wrap{display:none}.editor-toolbar .saved-state{display:none}}
 
 /* Revamp: trust, lifecycle, transparency and backstage */
 .notification-wrap{position:relative}.notification-button{position:relative}.notification-dot{position:absolute;right:1px;top:1px;min-width:14px;height:14px;border-radius:999px;background:#ef654a;color:white;font-size:8px;font-weight:800;display:grid;place-items:center;padding:0 3px;border:2px solid var(--color-shell)}

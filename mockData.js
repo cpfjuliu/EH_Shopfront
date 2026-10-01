@@ -1,4 +1,7 @@
+import { resultsProduct } from './resultsProduct.js'
+
 export const dataProducts = {
+  results: resultsProduct,
   attendance: {
     id: 'attendance',
     name: 'Student Attendance',
@@ -224,18 +227,18 @@ export const userProfiles = {
 
 export const recentItems = {
   analyst: [
-    ['Notebook', 'Frequent absence exploration', 'Updated yesterday'],
-    ['Data product', 'Student Attendance', 'Healthy'],
-    ['Dashboard', 'Attendance Overview', 'Daily'],
+    ['Notebook', 'Subject results comparison', 'Updated yesterday'],
+    ['Data product', 'Student Academic Results', 'Healthy'],
+    ['Dashboard', 'Academic Results Overview', 'Daily'],
   ],
   business: [
-    ['Dashboard', 'Student Attendance Overview', 'Updated today'],
-    ['Briefing', 'Attendance monthly briefing', '2 days ago'],
-    ['Explorer', 'Students Missing School Frequently', 'Updated today'],
+    ['Dashboard', 'Student Academic Results Overview', 'Updated today'],
+    ['Briefing', 'Academic Results monthly briefing', '2 days ago'],
+    ['Explorer', 'Academic Results leadership view', 'Updated today'],
   ],
   system: [
     ['Consumer', 'Student Support App', 'Production'],
-    ['Contract', 'Student Attendance v2.3', 'Healthy'],
+    ['Contract', 'Student Academic Results v1.2', 'Healthy'],
     ['Subscription', 'Student Identity', 'Active'],
   ],
   partner: [
@@ -247,17 +250,17 @@ export const recentItems = {
 
 export const notifications = {
   analyst: [
-    ['Data quality', '2 attendance source feeds are delayed', 'Latest values for two schools are provisional.', 'warning'],
-    ['Access', 'Student Attendance access approved', 'HQ Analytics Workspace is ready.', 'success'],
-    ['Change', 'Frequent absence rate v3 documentation updated', 'Calculation is unchanged; examples were clarified.', 'neutral'],
+    ['Data quality', '2 Results source feeds are delayed', 'Latest values for two schools are provisional.', 'warning'],
+    ['Access', 'Student Academic Results access approved', 'HQ Analytics Workspace is ready.', 'success'],
+    ['Change', 'Subject pass rate v1 documentation updated', 'Calculation is unchanged; examples were clarified.', 'neutral'],
   ],
   business: [
-    ['Briefing', 'Attendance monthly briefing is ready', 'Uses data validated at 6:03 PM today.', 'success'],
+    ['Briefing', 'Academic Results monthly briefing is ready', 'Uses data validated at 6:03 PM today.', 'success'],
     ['Data quality', '2 school feeds delayed', 'Affected values are labelled provisional.', 'warning'],
-    ['Change', 'Attendance Overview refreshed', '12 schools are above your saved monitoring threshold.', 'neutral'],
+    ['Change', 'Academic Results Overview refreshed', 'Eight schools have a Mathematics decline in your authorised comparison.', 'neutral'],
   ],
   system: [
-    ['Version', 'Student Attendance v2.4 planned', 'Non-breaking preview available for contract testing.', 'neutral'],
+    ['Version', 'Student Academic Results v1.3 planned', 'Non-breaking preview available for contract testing.', 'neutral'],
     ['Consumer health', '47 / 47 contract tests passed', 'Student Support App remains compatible.', 'success'],
     ['Data quality', '2 source feeds delayed', 'API responses expose freshness status.', 'warning'],
   ],
@@ -275,16 +278,16 @@ export const governanceBackstage = {
     ['Reusable consumption this month', '74%'],
   ],
   reviewQueue: [
-    ['Student Attendance v2.4', 'Version review', 'Student Data Domain', 'Due 2 Oct', 'In review'],
-    ['Student Results v1.0', 'Certification', 'Academic Data Domain', 'Due 5 Oct', 'Needs owner sign-off'],
+    ['Student Academic Results v1.3', 'Version review', 'Academic Data Domain', 'Due 2 Oct', 'In review'],
+    ['Programme Outcomes v1.0', 'Certification', 'Academic Data Domain', 'Due 5 Oct', 'Needs owner sign-off'],
     ['Partner project DSA-2041', 'Purpose renewal', 'Programme owner', 'Due 12 Nov', 'Pending'],
   ],
   incidents: [
-    ['Attendance feed delay', '2 schools', 'Opened 5:42 PM', 'Consumers automatically marked provisional', 'Monitoring'],
+    ['Academic Results feed delay', '2 schools', 'Opened 5:42 PM', 'Consumers automatically marked provisional', 'Monitoring'],
     ['Reference mapping warning', '1 code', 'Opened yesterday', 'No consumer impact', 'Investigating'],
   ],
   changes: [
-    ['Student Attendance v2.4', 'Preview', 'Add source_status field', '4 consumers tested, 0 breaking'],
+    ['Student Academic Results v1.3', 'Preview', 'Add source_status field', '4 consumers tested, 0 breaking'],
     ['Student Identity v1.9', 'Draft', 'Clarify enrolment effective dates', '3 consumers to test'],
   ],
 }

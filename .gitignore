@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.vercel/
+test-results/
+playwright-report/
+# Local package-manager tooling; deployment uses npm.
+pnpm-lock.yaml
+pnpm-workspace.yaml
