@@ -1,3 +1,4 @@
+import { resultFields, requestDatasets } from './accessModel.js'
 import { experienceFlows } from './experienceFlows.js'
 
 export const personas = ['business', 'analyst', 'system', 'partner']
@@ -7,8 +8,8 @@ export const stars = [5, 7, 9, 11]
 // file grants access to another persona's flow, even when a renderer is shared.
 const definitions = {
   business: {
-    5: { label:'Trusted dashboards', search:'Find trusted dashboards and reports…', features:['dashboardFilters'], recent:'Student Academic Results dashboard' },
-    7: { label:'Prepare a business view', search:'Find your prepared business view…', features:['dashboardFilters','guidedNeed'] },
+    5: { label:'Datasets & dashboards', search:'Find datasets and dashboards…', features:['dashboardFilters','datasetChat'], recent:'Student Academic Results dataset' },
+    7: { label:'Plan your analysis', search:'Find recommended datasets and dashboards…', features:['dashboardFilters','guidedNeed','datasetChat'] },
     9: { label:'Ask Edu Hub', search:'Find evidence for your question…', features:['businessQuestions'] },
     11:{ label:'Results briefing', search:'Find supporting briefing evidence…', features:['businessQuestions','proactiveBriefing'], supportingDashboard:true },
   },
@@ -39,12 +40,21 @@ function createExperience(persona, star, definition) {
     id:`step-${index}`, scope, screen, public:index===0,
     next:index<screens.length-1 ? `step-${index+1}` : null,
   }]))
+  routes.access = {id:'access',scope,public:true,screen:{kind:'accessHub',title:'Data access'}}
+  if(definition.features.includes('datasetChat')) routes['results-dashboard']={id:'results-dashboard',scope,public:true,screen:{kind:'resultsDashboard',title:'Student Academic Results dashboard'}}
   routes.evidence = { id:'evidence', scope, public:true, screen:{kind:'scopeEvidence',title:persona==='partner'?'Purpose, evidence & controls':'Definitions, evidence & quality',persona} }
   routes.help = { id:'help', scope, public:true, screen:{kind:'experienceHelp',title:'Help & scope',description:experienceFlows[persona][star].entryLabel} }
   if (definition.productLibrary) for (const productId of ['identity','attendance']) routes[`product-${productId}`]={id:`product-${productId}`,scope,public:true,screen:{kind:'asset',productId,readOnly:true}}
   if (definition.supportingDashboard) routes['supporting-dashboard'] = {id:'supporting-dashboard',scope,public:true,screen:{...screens.find(s=>s.kind==='resultsDashboard'),kind:'resultsDashboard',title:'Supporting Results dashboard',subtitle:'Verify your briefing · same authorised scope and comparison period',prepared:true}}
   if (definition.productEvidence) routes['source-product'] = {id:'source-product',scope,public:true,screen:{kind:'asset',productId:'results',readOnly:true}}
+  const baseRequirements=persona==='partner'?{results:['aggregate_comparison']}:{results:persona==='system'?[...resultFields,'student_id']:resultFields,...(['analyst'].includes(persona)||definition.features.includes('businessQuestions')?{identity:['student_id']}: {})}
+  for(const route of Object.values(routes)) {
+    const kind=route.screen.kind
+    if(['briefing','businessAnswer','resultsDashboard','dashboardDetail','workspace','progress','controlled','partnerOutcome','consumerHealth','change'].includes(kind)||(kind==='table'&&persona==='business')||(kind==='api'&&route.id!=='step-1')) route.requires=baseRequirements
+    if(kind==='controlled'&&route.screen.subset)route.requires={results:['participant_token','level','results_band']}
+  }
   const actions = [
+    {id:'access',label:'Data access',route:'access',placement:'context'},
     {id:'evidence',label:persona==='partner'?'Inspect purpose & controls':'Inspect evidence & quality',route:'evidence',placement:'context'},
     ...(definition.supportingDashboard ? [{id:'supporting-dashboard',label:'View supporting dashboard',route:'supporting-dashboard',placement:'context'}] : []),
     ...(definition.productEvidence ? [{id:'source-product',label:'Inspect underlying SDP',route:'source-product',placement:'context'}] : []),
@@ -55,14 +65,14 @@ function createExperience(persona, star, definition) {
       ? {title:'Results freshness notice',copy:'Two school submissions are delayed. Inspect the contract treatment.',route:'evidence'}
       : {title:'Two Results submissions are delayed',copy:'Inspect coverage and permitted use before interpreting comparisons.',route:'evidence'}
   return {
-    scope, persona, star, landing:'step-0', routes,
+    scope, persona, star, landing:'step-0', routes, requiredAccess:baseRequirements,
     features:definition.features,
     navigation:[{label:definition.label,route:'step-0',icon:persona==='system'?'code':persona==='partner'?'folder':persona==='analyst'?'data':'chart'}],
     searchPlaceholder:definition.search,
     // No generic persona-wide recent cards, counters or quick actions.
     home:{primary:'step-0',modules:['primary'],cards:definition.recent?[{label:definition.recent,route:'step-0'}]:[]},
     actions,
-    search:[{label:definition.label,description:'Student Academic Results · your current experience',route:'step-0'},...actions.filter(a=>a.id==='evidence').map(a=>({label:a.label,description:'Definitions, scope and limitations',route:a.route})),...(definition.productLibrary?[{label:'Student Identity',description:'Reference SDP details',route:'product-identity'},{label:'Student Attendance',description:'Reference SDP details',route:'product-attendance'}]:[])],
+    search:[{label:definition.label,description:'Student Academic Results · your current experience',route:'step-0'},...actions.filter(a=>['evidence','access'].includes(a.id)).map(a=>({label:a.label,description:'Definitions, scope and limitations',route:a.route})),...(definition.productLibrary?[{label:'Student Identity',description:'Reference SDP details',route:'product-identity'},{label:'Student Attendance',description:'Reference SDP details',route:'product-attendance'}]:[])],
     notifications:[notification],
     quickActions:[],
   }
@@ -82,7 +92,7 @@ export function parseRoute(config, hash) {
   return match && `${match[1]}/${match[2]}`===config.scope && Object.hasOwn(config.routes,match[3]) ? match[3] : config.landing
 }
 export function createJourney(config) {
-  return {scope:config.scope,route:config.landing,unlocked:[config.landing],trail:[],question:'',analysisLevel:'All levels',delivery:'REST API',historyMode:'replace'}
+  return {scope:config.scope,route:config.landing,unlocked:[config.landing],trail:[],question:'',selectedDataset:'results',analysisLevel:'All levels',delivery:'REST API',historyMode:'replace'}
 }
 export function canVisit(config, state, route) {
   return state.scope===config.scope && Object.hasOwn(config.routes,route) && (config.routes[route].public || state.unlocked.includes(route))
@@ -94,6 +104,7 @@ export function canVisit(config, state, route) {
 export function transition(config, state, action) {
   if (action.scope!==config.scope || state.scope!==config.scope) return state
   if (action.source && action.source!==state.route) return state
+  if(action.type==='DATASET')return hasCapability(config,'datasetChat')&&requestDatasets(config.persona).some(d=>d.id===action.value)?{...state,selectedDataset:action.value}:state
   if (action.type==='QUESTION') return hasCapability(config,'businessQuestions') && typeof action.value==='string' ? {...state,question:action.value} : state
   if (action.type==='LEVEL') return hasCapability(config,'methodOverride') && ['All levels','Secondary 1','Secondary 2'].includes(action.value) ? {...state,analysisLevel:action.value} : state
   if (action.type==='DELIVERY') return hasCapability(config,'manualDelivery') && ['REST API','Direct query','Managed file'].includes(action.value) ? {...state,delivery:action.value} : state

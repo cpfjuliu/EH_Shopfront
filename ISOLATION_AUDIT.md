@@ -6,8 +6,8 @@ The prototype preserves the existing palette, layout, synthetic Academic Results
 
 | Persona | Star | Isolated starting experience | Journey and isolation |
 | --- | --- | --- | --- |
-| Business | 5 | Discover a trusted dashboard; choose filters manually | PASS |
-| Business | 7 | Describe the leadership need; open a prepared view | PASS |
+| Business | 5 | Discover datasets/dashboards; request fields; use dataset-scoped chat and analysis | PASS |
+| Business | 7 | Describe a need; receive datasets/dashboard and access steps; then chat and analyse | PASS |
 | Business | 9 | Ask Edu Hub; submit before any answer appears | PASS |
 | Business | 11 | Personalised Results briefing; explore with retained context | PASS |
 | Analyst | 5 | Catalogue, SDP, access request, manual SQL | PASS |
@@ -24,6 +24,10 @@ The prototype preserves the existing palette, layout, synthetic Academic Results
 | Partner | 11 | Approved aggregate outcome first; inspect controls | PASS |
 
 ## Automated checks
+
+- First-time approval gates tested across all 16 combinations in addition to the returning-user journeys. Discovery metadata stays available; protected consumption and provisioning require approved fields.
+- A single request carries fields from multiple datasets to their respective owners. Separate approval/denial decisions grant only approved fields immediately. The test continues into Business 5 chat, follow-up questions and analysis, then expires access and verifies data disappears.
+- Business 7 partial field approval permits dataset explanations but cannot unlock calculations requiring additional fields. Request form mobile layout is checked.
 
 - All 16 capability states: explicit landing kinds, one primary navigation entry, only scoped surface destinations, sequential grants, foreign/stale action rejection, feature-specific overrides, invalid preference fallback.
 - All 16 complete journeys: normal actions preserve persona/star; foreign primary actions are absent; manual analysis has no generated assistant; partner packages do not show outcome metrics; reactive answers require submission.

@@ -1,3 +1,5 @@
+import { AccessContext, useAccess, AccessGate, AccessHub, OwnerApprovals, DatasetDiscovery, DatasetDetail, RecommendedDatasets, DatasetTools } from './AccessExperience.jsx'
+import { accessTransition, restoreAccess } from './accessModel.js'
 import React, { useEffect, useRef, useState } from 'react'
 import { personaMeta } from './experienceFlows.js'
 import { chartData, dataProducts, governanceBackstage, userProfiles } from './mockData.js'
@@ -102,7 +104,7 @@ function Topbar({ config, onSearch, onNavigate, onLogout }) {
     </div></header>
 }
 
-function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBackstage }) {
+function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBackstage, scenario, onScenario }) {
   const [open, setOpen] = useState(false)
   return (
     <div className={`prototype-control ${open ? 'open' : ''}`}>
@@ -112,7 +114,7 @@ function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBacksta
         <div className="prototype-options">{personas.map((p) => <button key={p} className={p === persona ? 'selected' : ''} onClick={() => onPersona(p)}>{personaMeta[p].label}</button>)}</div>
         <div className="prototype-label">Experience vision</div>
         <div className="prototype-options">{stars.map((s) => <button key={s} className={s === star ? 'selected' : ''} onClick={() => onStar(s)}>{s}★</button>)}</div>
-        <button className="prototype-reset" onClick={onBackstage}><Icon name="shield" size={13}/>Open data owner / governance backstage</button>
+        <div className="prototype-label">Access scenario</div><div className="prototype-options"><button className={scenario==='first'?'selected':''} onClick={()=>onScenario('first')}>First-time user</button><button className={scenario==='returning'?'selected':''} onClick={()=>onScenario('returning')}>Returning user</button></div><button className="prototype-reset" onClick={onBackstage}><Icon name="shield" size={13}/>Open data owner / governance backstage</button>
         <button className="prototype-reset" onClick={onReset}><Icon name="refresh" size={13}/>Reset journey</button>
         <div className="prototype-note">Demo-only control. A real Edu Hub user would not see this.</div>
       </div>}
@@ -180,11 +182,14 @@ function AssetScreen({ screen, onNext, onBack, config }) {
 }
 
 function ProductTabContent({ p, tab }) {
+  const {access}=useAccess()
+  const indexes=p.fields.map((f,i)=>access.grants[p.id]?.includes(f[0])?i:-1).filter(i=>i>=0)
+  const sample=indexes.length?<SimpleTable columns={indexes.map(i=>p.fields[i][0])} rows={p.sampleRows.map(row=>indexes.map(i=>row[i]||'—'))}/>:<p role="status">Sample values require approved field access. Schema definitions remain discoverable.</p>
   if (tab === 'Overview') return <div className="asset-layout"><div>
     <h3>What this product is for</h3><p className="body-copy">{p.definition}</p>
-    <h3 className="section-title">Sample data</h3><SimpleTable columns={p.fields.slice(0,p.sampleRows[0]?.length || 5).map(f=>f[0])} rows={p.sampleRows}/>
+    <h3 className="section-title">Sample data</h3>{sample}
   </div><aside className="asset-aside"><Info label="Lifecycle" value={`${p.lifecycle} · ${p.version}`}/><Info label="Data steward" value={p.steward}/><Info label="Source" value={p.source}/><Info label="Approved use" value={p.allowedUse}/><Info label="Recommended join" value={p.id === 'attendance' ? 'Student Identity on student_id' : 'Use governed identifiers'}/></aside></div>
-  if (tab === 'Schema') return <div className="product-tab"><div className="tab-intro"><div><h3>Schema</h3><p>Contracted fields with classification and validation expectations.</p></div><Badge>{p.version}</Badge></div><SimpleTable columns={['Field','Type','Description','Classification','Rule']} rows={p.fields}/><h3 className="section-title">Masked sample rows</h3><SimpleTable columns={p.fields.slice(0,p.sampleRows[0]?.length || 5).map(f=>f[0])} rows={p.sampleRows}/></div>
+  if (tab === 'Schema') return <div className="product-tab"><div className="tab-intro"><div><h3>Schema</h3><p>Contracted fields with classification and validation expectations.</p></div><Badge>{p.version}</Badge></div><SimpleTable columns={['Field','Type','Description','Classification','Rule']} rows={p.fields}/><h3 className="section-title">Masked sample rows</h3>{sample}</div>
   if (tab === 'Delivery') return <div className="product-tab"><div className="tab-intro"><div><h3>Delivery</h3><p>Supported consumption routes are part of the product contract, not ad-hoc integration choices.</p></div><Badge tone="success">Monitored</Badge></div><SimpleTable columns={['Route','Interface','Cadence','Intended consumers','Commitment']} rows={p.deliveries}/></div>
   if (tab === 'Versions') return <div className="product-tab"><div className="tab-intro"><div><h3>Versions</h3><p>Consumers can see what changed, what remains supported and when action is required.</p></div><Badge>{p.lifecycle}</Badge></div><SimpleTable columns={['Version','Status','Released','Change','Supported until']} rows={p.versions}/></div>
   if (tab === 'Consumers') return <div className="product-tab"><div className="tab-intro"><div><h3>Registered consumers</h3><p>Knowing who depends on the product lets Edu Hub assess impact before changes are released.</p></div><Badge>{p.consumers.length} consumers</Badge></div><SimpleTable columns={['Consumer','Route','Contract','Environment','Last activity']} rows={p.consumers}/></div>
@@ -196,13 +201,6 @@ function ProductTabContent({ p, tab }) {
 
 function Meta({label,value}) { return <div className="meta-card"><span>{label}</span><strong>{value}</strong></div> }
 function Info({label,value}) { return <div className="info-block"><span>{label}</span><p>{value}</p></div> }
-function FormScreen({ screen, onNext, onBack }) {
-  return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Requests','New']} />
-    <div className="form-card">{screen.fields.map(([label,value],i) => <label className="form-field" key={label}><span>{label}</span>{i === 1 || value.length > 50 ? <textarea defaultValue={value}/> : <input defaultValue={value}/>}<small>{i===0 ? 'Use a clear purpose so policy and approvers can be determined.' : ''}</small></label>)}</div>
-    <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
-  </div>
-}
-
 function IntentScreen({ screen, onNext, onBack, loading, onQuestion }) {
   const [prompt,setPrompt] = useState(screen.prompt)
   return <div className="page-content intent-page"><PageHeader title="Home" />
@@ -340,6 +338,7 @@ function IncidentScreen({ screen, onNext, onBack }) {
 
 function GovernanceScreen({ onBack }) {
   return <div className="page-content"><PageHeader title="Data owner & governance backstage" subtitle="The operating layer behind the consumer experience. This is a prototype backstage view, not a fifth consumer persona." breadcrumbs={['Platform','Governance']} />
+    <OwnerApprovals/>
     <div className="metric-grid metric-grid-4">{governanceBackstage.metrics.map(([l,v])=><Metric key={l} label={l} value={v}/>)}</div>
     <div className="governance-grid">
       <div className="panel-card"><div className="tab-intro"><div><h3>Review queue</h3><p>Ownership, certification and purpose reviews that require human accountability.</p></div><Badge tone="warning">3 open</Badge></div><SimpleTable columns={['Item','Review','Owner','Due','Status']} rows={governanceBackstage.reviewQueue}/></div>
@@ -363,13 +362,17 @@ function ExperienceHelp({ config, onBack }) {
 }
 
 function renderScreen(screen, props) {
-  const map={scopeEvidence:ScopeEvidence,experienceHelp:ExperienceHelp,briefing:Briefing,businessAnswer:BusinessAnswer,resultsDashboard:ResultsDashboard,partnerOutcome:PartnerOutcome,contractTests:ContractTests,catalog:CatalogScreen,asset:AssetScreen,form:FormScreen,intent:IntentScreen,plan:PlanScreen,progress:ProgressScreen,workspace:WorkspaceScreen,discover:DiscoverScreen,dashboardDetail:DashboardDetail,recommendations:RecommendationsScreen,table:TableScreen,api:ApiScreen,contract:ContractScreen,controlled:ControlledScreen,consumerHealth:ConsumerHealth,change:ChangeScreen,incident:IncidentScreen}
+  const map={accessHub:AccessHub,datasetDiscovery:DatasetDiscovery,datasetDetail:DatasetDetail,recommendedDatasets:RecommendedDatasets,datasetTools:DatasetTools,scopeEvidence:ScopeEvidence,experienceHelp:ExperienceHelp,briefing:Briefing,businessAnswer:BusinessAnswer,resultsDashboard:ResultsDashboard,partnerOutcome:PartnerOutcome,contractTests:ContractTests,catalog:CatalogScreen,asset:AssetScreen,intent:IntentScreen,plan:PlanScreen,progress:ProgressScreen,workspace:WorkspaceScreen,discover:DiscoverScreen,dashboardDetail:DashboardDetail,recommendations:RecommendationsScreen,table:TableScreen,api:ApiScreen,contract:ContractScreen,controlled:ControlledScreen,consumerHealth:ConsumerHealth,change:ChangeScreen,incident:IncidentScreen}
   const Component=map[screen.kind]
   if(!Component) throw new Error('Unregistered experience screen: '+screen.kind)
   return <Component screen={screen} {...props}/>
 }
 
-function Experience({ config, onLogout, backstage, setBackstage }) {
+function Experience({ config, onLogout, backstage, setBackstage, scenario }) {
+  const accessKey=`eh_access_v1/${config.scope}/${scenario}`
+  const [access,setAccess]=useState(()=>restoreAccess(config.persona,scenario,sessionStorage.getItem(accessKey)))
+  useEffect(()=>{sessionStorage.setItem(accessKey,JSON.stringify(access))},[access,accessKey])
+  const send=action=>setAccess(previous=>accessTransition(previous,{...action,persona:config.persona}))
   const [state,setState]=useState(()=>createJourney(config))
   const current=useRef(state)
   const timer=useRef(null)
@@ -414,23 +417,23 @@ function Experience({ config, onLogout, backstage, setBackstage }) {
   const back=()=>{cancelPending();dispatch({type:'BACK'})}
   let screen=config.routes[state.route].screen
   if(hasCapability(config,'manualDelivery') && screen.kind==='api' && state.delivery!=='REST API') screen={...screen,title:state.delivery+' integration',code:state.delivery==='Direct query'?'-- Use your approved workload identity in the authorised query environment.\nSELECT student_id, subject, academic_year, passed\nFROM edu_hub.student_academic_results\nWHERE academic_year = 2026;':'Secure managed file delivery\nSchedule: daily at 6:15 PM\nFormat: approved fields only; manifest includes freshness status\nIdentity: registered application\nExpired entitlement: delivery stopped',facts:[['Delivery',state.delivery],['Freshness','Daily'],['Entitlement','Registered application only'],['Data','Contracted minimum fields']]}
-  if(hasCapability(config,'manualDelivery') && screen.kind==='form') screen={...screen,fields:screen.fields.map(([label,value])=>[label,label==='Delivery'?state.delivery:value])}
-  const props={config,onNavigate:navigate,onNext:next,onBack:back,loading,question:state.question,onQuestion:value=>dispatch({type:'QUESTION',source:state.route,value}),analysisLevel:state.analysisLevel,onAnalysisLevel:value=>dispatch({type:'LEVEL',source:state.route,value}),delivery:state.delivery,onDelivery:value=>dispatch({type:'DELIVERY',source:state.route,value})}
-  return <div className="app-shell" data-experience={config.scope} data-route={state.route}>
+  const props={config,selectedDataset:state.selectedDataset,onSelectDataset:value=>dispatch({type:'DATASET',source:state.route,value}),onNavigate:navigate,onNext:next,onBack:back,loading,question:state.question,onQuestion:value=>dispatch({type:'QUESTION',source:state.route,value}),analysisLevel:state.analysisLevel,onAnalysisLevel:value=>dispatch({type:'LEVEL',source:state.route,value}),delivery:state.delivery,onDelivery:value=>dispatch({type:'DELIVERY',source:state.route,value})}
+  return <AccessContext.Provider value={{access,send,navigate,config}}><div className="app-shell" data-experience={config.scope} data-route={state.route}>
     <Topbar config={config} onSearch={()=>setSearchOpen(true)} onNavigate={navigate} onLogout={onLogout}/>
     <Sidebar config={config} route={state.route} onNavigate={navigate}/>
     <main className="main-area">
       {backstage ? <GovernanceScreen onBack={()=>setBackstage(false)}/> : <>
-        <React.Fragment key={state.route}>{renderScreen(screen,props)}</React.Fragment>
+        <React.Fragment key={state.route}><AccessGate requirements={config.routes[state.route].requires}>{renderScreen(screen,props)}</AccessGate></React.Fragment>
         <nav className="context-actions" aria-label="Supporting context">{config.actions.filter(action=>action.route!==state.route).map(action=><button key={action.id} onClick={()=>navigate(action.route)}>{action.label}</button>)}</nav>
         {state.route===config.landing && config.home.cards.length>0 && <section className="experience-recents" aria-label="Recently used">{config.home.cards.map(card=><button className="recent-card" key={card.route} onClick={()=>navigate(card.route)}><span>Recently used</span><strong>{card.label}</strong></button>)}</section>}
       </>}
     </main>
     {searchOpen && <SearchOverlay config={config} onClose={()=>setSearchOpen(false)} onPick={navigate}/>}
-  </div>
+  </div></AccessContext.Provider>
 }
 
 function App() {
+  const [scenario,setScenario]=useState(()=>sessionStorage.getItem('eh_access_scenario')==='first'?'first':'returning')
   const [backstage,setBackstage]=useState(false)
   const [loggedIn,setLoggedIn]=useState(()=>localStorage.getItem('eh_logged_in')==='1')
   const [selection,setSelection]=useState(()=>{
@@ -442,6 +445,7 @@ function App() {
   const select=(persona,star)=>{
     if(!personas.includes(persona)||!stars.includes(star))return
     setBackstage(false)
+    for(const preset of ['first','returning'])sessionStorage.removeItem(`eh_access_v1/${persona}/${star}/${preset}`)
     localStorage.setItem('eh_persona',persona);localStorage.setItem('eh_star',String(star))
     window.history.replaceState(null,'',routeHash(getExperience(persona,star),'step-0'))
     setSelection(s=>({persona,star,generation:s.generation+1}))
@@ -449,7 +453,7 @@ function App() {
   const login=()=>{localStorage.setItem('eh_logged_in','1');setLoggedIn(true)}
   const logout=()=>{setBackstage(false);localStorage.removeItem('eh_logged_in');setLoggedIn(false);setSelection(s=>({...s,generation:s.generation+1}));window.history.replaceState(null,'',routeHash(config,config.landing))}
   if(!loggedIn)return <Login onLogin={login}/>
-  return <><Experience key={`${config.scope}/${selection.generation}`} config={config} backstage={backstage} setBackstage={setBackstage} onLogout={logout}/><PrototypeControl persona={config.persona} star={config.star} onPersona={persona=>select(persona,config.star)} onStar={star=>select(config.persona,star)} onReset={()=>select(config.persona,config.star)} onBackstage={()=>setBackstage(true)}/></>
+  return <><Experience key={`${config.scope}/${selection.generation}`} config={config} scenario={scenario} backstage={backstage} setBackstage={setBackstage} onLogout={logout}/><PrototypeControl scenario={scenario} onScenario={value=>{sessionStorage.setItem('eh_access_scenario',value);setScenario(value);select(config.persona,config.star)}} persona={config.persona} star={config.star} onPersona={persona=>select(persona,config.star)} onStar={star=>select(config.persona,star)} onReset={()=>select(config.persona,config.star)} onBackstage={()=>setBackstage(true)}/></>
 }
 
 export default App

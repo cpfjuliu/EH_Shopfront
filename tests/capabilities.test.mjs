@@ -3,10 +3,10 @@ import test from 'node:test'
 import {personas, stars, getExperience, createJourney, transition, canVisit, parseRoute, routeHash} from '../experienceCapabilities.js'
 
 const expected = {
-  business:['discover','intent','intent','briefing'],
+  business:['datasetDiscovery','intent','intent','briefing'],
   analyst:['catalog','intent','intent','briefing'],
   system:['contract','intent','intent','consumerHealth'],
-  partner:['form','intent','intent','partnerOutcome'],
+  partner:['accessHub','intent','intent','partnerOutcome'],
 }
 for(const persona of personas) for(const [index,star] of stars.entries()) test(`${persona} ${star}: isolated routes, actions and prerequisites`,()=>{
   const c=getExperience(persona,star), initial=createJourney(c)

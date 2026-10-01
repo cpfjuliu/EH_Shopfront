@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test tests/capabilities.test.mjs && node tests/journeys.mjs && node tests/isolation.mjs",
-    "test:capabilities": "node --test tests/capabilities.test.mjs",
+    "test": "node --test tests/capabilities.test.mjs tests/access.test.mjs && node tests/journeys.mjs && node tests/isolation.mjs && node tests/access-journeys.mjs",
+    "test:capabilities": "node --test tests/capabilities.test.mjs tests/access.test.mjs",
     "test:journeys": "node tests/journeys.mjs",
-    "test:isolation": "node tests/isolation.mjs"
+    "test:isolation": "node tests/isolation.mjs",
+    "test:access": "node tests/access-journeys.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -25,7 +25,7 @@ export function ResultsDashboard({ screen, onBack }) {
   const rows=dashboardRows(subject,level,school)
   const shown = period==='Compare years'?rows:rows.map(r=>[r[0],r[period==='2025'?1:2]])
   return <div className="page-content"><Header {...screen}/>
-    {screen.prepared && <div className="trust-banner"><strong>Leadership view prepared</strong><span>All subjects · 2026 vs 2025 · authorised HQ schools. Adjust the pre-built view below.</span></div>}
+    {screen.prepared && <div className="trust-banner"><strong>Recommended dashboard</strong><span>All subjects · 2026 vs 2025 · authorised HQ schools. Explore the dashboard below.</span></div>}
     <div className="results-filters">{[['Subject',subject,setSubject,['All subjects','Mathematics','English','Science']],['Period',period,setPeriod,['2026','2025','Compare years']],['Level',level,setLevel,['All levels','Secondary 1','Secondary 2']],['School',school,setSchool,['All schools',...schoolResults.map(s=>s.school)]]].map(([label,value,set,options])=><label key={label}>{label}<select aria-label={label} value={value} onChange={e=>set(e.target.value)}>{options.map(o=><option key={o}>{o}</option>)}</select></label>)}</div>
     <p className="body-copy">{resultsContext.definition}</p>
     <Table columns={period==='Compare years'?['School / subject','2025','2026','Change']:['School / subject',period]} rows={shown}/>

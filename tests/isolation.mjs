@@ -31,7 +31,7 @@ async function hash(value) {
     location.hash=value
   }),value)
 }
-const primaryKinds={business:new Set(['discover','dashboardDetail','resultsDashboard','intent','recommendations','businessAnswer','table','briefing']),analyst:new Set(['catalog','asset','form','intent','plan','progress','workspace','incident','briefing']),system:new Set(['contract','api','form','intent','plan','progress','contractTests','consumerHealth','change','table']),partner:new Set(['form','table','progress','controlled','intent','plan','partnerOutcome'])}
+const primaryKinds={business:new Set(['datasetDiscovery','datasetDetail','datasetTools','recommendedDatasets','resultsDashboard','intent','businessAnswer','table','briefing']),analyst:new Set(['catalog','asset','accessHub','intent','plan','progress','workspace','incident','briefing']),system:new Set(['contract','api','accessHub','intent','plan','progress','contractTests','consumerHealth','change','table']),partner:new Set(['accessHub','table','progress','controlled','intent','plan','partnerOutcome'])}
 try {
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:5173')
   await button('Continue with MOE SSO').click()
@@ -117,7 +117,8 @@ try {
   await button('Use selected delivery').click();await route('step-1')
   assert((await page.locator('.dev-code').innerText()).includes('Secure managed file delivery'))
   await button('Request system access').click();await route('step-2')
-  assert.equal(await page.getByLabel('Delivery',{exact:true}).inputValue(),'Managed file')
+  await button('Continue with approved access').click();await route('step-3')
+  assert((await page.locator('.dev-code').innerText()).includes('Secure managed file delivery'))
   await stable(developer)
   assert.deepEqual(errors,[],'Console/runtime errors')
   await fs.writeFile('test-results/isolation-audit.json',JSON.stringify({combinations:report,consoleErrors:errors},null,2))

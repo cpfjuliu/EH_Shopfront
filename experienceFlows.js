@@ -20,16 +20,10 @@ export const experienceFlows = {
           "secondaryLabel": "View sample SQL"
         },
         {
-          "kind": "form",
-          "title": "Request Results access",
+          "kind": "accessHub",
+          "title": "Data access",
           "subtitle": "Purpose and workspace determine entitlement.",
-          "fields": [
-            ["Purpose","Compare academic results by subject, level and school."],
-            ["Workspace","HQ Analytics"],
-            ["Requested data","Student Academic Results, Student Identity"],
-            ["Access period","90 days"]
-          ],
-          "primaryLabel": "Submit request"
+          "primaryLabel": "Continue with approved access"
         },
         {
           "kind": "workspace",
@@ -197,57 +191,42 @@ export const experienceFlows = {
   },
   "business": {
     "5": {
-      "entryLabel": "Find Student Academic Results",
+      "entryLabel": "Discover datasets and dashboards",
       "screens": [
         {
-          "kind": "discover",
-          "title": "Discover",
-          "subtitle": "Find and choose a trusted report. Apply your own filters.",
-          "search": "Student Academic Results",
-          "items": [
-            ["Dashboard","Student Academic Results","Subject pass rates by school, level and year.","Trusted"]
-          ],
-          "primaryLabel": "Open Student Academic Results"
+          "kind": "datasetDiscovery",
+          "title": "Discover datasets & dashboards"
         },
         {
-          "kind": "dashboardDetail",
+          "kind": "datasetDetail",
           "title": "Student Academic Results",
-          "subtitle": "Inspect the trusted dashboard before opening it.",
-          "primaryLabel": "Open dashboard"
+          "primaryLabel": "Use approved dataset"
         },
         {
-          "kind": "resultsDashboard",
-          "title": "Student Academic Results",
-          "subtitle": "Trusted aggregate results · Synthetic fixture · Authorised HQ scope",
-          "prepared": false
+          "kind": "datasetTools",
+          "title": "Use your approved data"
         }
       ]
     },
     "7": {
-      "entryLabel": "Prepare a leadership briefing",
+      "entryLabel": "Describe your analysis need",
       "screens": [
         {
           "kind": "intent",
-          "title": "What do you need to prepare?",
+          "title": "What do you need to understand?",
           "eyebrow": "Academic Results",
-          "prompt": "I need a briefing on this year’s academic results for senior leaders.",
-          "primaryLabel": "Recommend a results view",
-          "subtitle": "Describe your need using the synthetic Academic Results scenario."
+          "subtitle": "Describe your need. Edu Hub recommends datasets, a dashboard and the steps to get access and analyse the data.",
+          "prompt": "I need to understand this year’s academic results for senior leaders.",
+          "primaryLabel": "Recommend datasets and steps"
         },
         {
-          "kind": "recommendations",
-          "title": "Your recommended Results view",
-          "subtitle": "2026 vs 2025, all subjects and HQ schools are already selected.",
-          "items": [
-            ["Best match","Academic Results leadership view","Pre-built comparison by subject, level and school. Prepared for senior leaders.","Access granted"]
-          ],
-          "primaryLabel": "Open prepared view"
+          "kind": "recommendedDatasets",
+          "title": "Your recommended datasets & dashboard",
+          "primaryLabel": "Analyse approved data"
         },
         {
-          "kind": "resultsDashboard",
-          "title": "Student Academic Results",
-          "subtitle": "Trusted aggregate results · Synthetic fixture · Authorised HQ scope",
-          "prepared": true
+          "kind": "datasetTools",
+          "title": "Use your approved data"
         }
       ]
     },
@@ -347,16 +326,10 @@ export const experienceFlows = {
           "primaryLabel": "Request system access"
         },
         {
-          "kind": "form",
-          "title": "Request system access",
+          "kind": "accessHub",
+          "title": "Data access",
           "subtitle": "Register your consuming application and permitted use.",
-          "fields": [
-            ["Application","Results Support App"],
-            ["Purpose","Display approved academic results to authorised officers."],
-            ["Environment","Sandbox then production"],
-            ["Delivery","REST API"]
-          ],
-          "primaryLabel": "Submit request"
+          "primaryLabel": "Continue with approved access"
         },
         {
           "kind": "api",
@@ -526,17 +499,10 @@ export const experienceFlows = {
       "entryLabel": "Start from an approved data request",
       "screens": [
         {
-          "kind": "form",
-          "title": "New data-sharing request",
+          "kind": "accessHub",
+          "title": "Data access",
           "subtitle": "Register the approved purpose before selecting data.",
-          "fields": [
-            ["Partner organisation","Example Programme Partner"],
-            ["Approved purpose","Evaluate academic outcomes of the Student Support Programme."],
-            ["MOE sponsor","Programme owner"],
-            ["Access period","180 days"],
-            ["Requested data","Pseudonymous participant ID, level, academic results band"]
-          ],
-          "primaryLabel": "Continue"
+          "primaryLabel": "Continue with approved access"
         },
         {
           "kind": "table",

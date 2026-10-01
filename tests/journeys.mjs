@@ -43,6 +43,20 @@ try {
         }
       }
       if(persona==='analyst' && star===9 && screen.kind==='plan') await page.getByLabel('Override analysis level').selectOption('Secondary 2')
+      if(screen.kind==='datasetTools') {
+        await page.getByLabel('Ask about your dataset').fill('What does this dataset contain?')
+        await button('Send question').click()
+        assert((await page.locator('.dataset-message').innerText()).includes('pass rate'))
+        await button('Analytical tool').click()
+        assert((await page.locator('.results-table').innerText()).includes('School A'))
+      }
+      if(screen.kind==='recommendedDatasets') {
+        await button('Open recommended dashboard').click()
+        await visible(page.getByLabel('Subject',{exact:true}))
+        assert((await page.locator('.results-table').innerText()).includes('School A'))
+        await button('Back').click()
+        await visible(page.getByRole('heading',{name:screen.title,exact:true}))
+      }
       if(screen.kind==='workspace') {
         assert.equal(await page.locator('.assistant-panel').count(),star===5?0:1)
         assert.equal(await button('Why this answer?').count(),0)
@@ -93,7 +107,10 @@ try {
       const forbidden=persona==='business'?['Generate analysis','Request system access','Propose minimum interaction']:persona==='analyst'?['Ask Edu Hub','Request system access','Propose minimum interaction']:persona==='system'?['Ask Edu Hub','Generate analysis','Propose minimum interaction']:['Ask Edu Hub','Generate analysis','Request system access']
       if(star===5) forbidden.push('Propose analytical method','Generate scaffold and tests','Recommend project package','Recommend integration')
       for(const name of forbidden) assert.equal(await page.locator('.main-area').getByRole('button',{name,exact:true}).count(),0,`${persona} ${star}: ${name} leaked`)
-      if(i<screens.length-1) await advance(screen)
+      if(i<screens.length-1) {
+        if(screen.kind==='datasetDiscovery')await page.locator('.asset-card').filter({has:page.getByText('Student Academic Results',{exact:true})}).click()
+        else await advance(screen)
+      }
     }
     await button('Back').click()
     await visible(page.locator('.main-area'))
