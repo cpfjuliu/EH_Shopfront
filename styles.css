@@ -206,3 +206,30 @@ kbd{font:inherit;font-size:10px;border:1px solid #526170;border-radius:4px;paddi
 @media(max-width:780px){.notification-panel{position:fixed;left:16px;right:16px;top:62px;width:auto}.home-grid-3{grid-template-columns:1fr}.trust-banner,.attention-banner{grid-template-columns:32px 1fr}.trust-banner>.badge,.attention-banner>.button{grid-column:2;justify-self:start}.definition-callout{align-items:flex-start;flex-direction:column}.contract-key{grid-template-columns:1fr;gap:3px}.transparency-actions{overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}.transparency-actions button{white-space:nowrap}.governance-grid,.contract-overview,.incident-grid{grid-template-columns:1fr}}
 
 .page-content>.form-field{display:block}.page-content>.form-field select{display:block;margin-top:8px}
+
+/* Shared interaction hierarchy and accessible disclosure. */
+.ux-dialog{border:1px solid var(--color-border);border-radius:10px;padding:0;width:min(760px,calc(100vw - 32px));max-height:85dvh;color:var(--color-text);background:white;overflow:auto}
+.ux-dialog::backdrop{background:rgba(13,20,27,.5)}
+.dialog-body{padding:24px}.dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}.dialog-heading h2{margin:0;font-size:20px}
+.ux-dialog .search-dialog-input{padding:0}.ux-dialog .search-dialog-input input{width:100%;min-height:44px}.ux-dialog .search-results button{min-height:44px}
+.evidence-list{margin:16px 0}.evidence-list>div{padding:12px 0;border-top:1px solid var(--color-border)}.evidence-list dt{font-weight:700;font-size:13px}.evidence-list dd{margin:6px 0 0;font-size:13px;line-height:1.6}.evidence-context{font-weight:600}
+summary{cursor:pointer;min-height:44px;padding:12px 0;font-size:13px;color:var(--color-text-secondary)}summary:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}
+.secondary-disclosure{margin:16px 0}.context-actions{align-items:flex-start}.context-actions>button{min-height:44px}.context-actions details>div{display:flex;gap:8px;flex-wrap:wrap}.context-actions summary{padding:12px}.context-actions details button{min-height:44px}
+.access-gate details{margin-top:16px}.access-ready{margin-bottom:24px}.access-request{max-width:1000px}.access-request>button{margin-top:16px}.request-status-list{border-top:1px solid var(--color-border);margin-top:24px}.access-request textarea{width:100%}
+.catalog-layout{min-height:0}.catalog-main .table-row .badge{white-space:normal;overflow-wrap:anywhere}.catalog-main .table-row{grid-template-columns:1.2fr 1fr 1fr .8fr 1.2fr}
+.button,.suggestion-row button,.tabs button,.icon-button{min-height:44px}.icon-button{min-width:44px}.suggestion-row button{white-space:normal;text-align:left}
+@media(max-width:780px){
+  /* A dedicated presenter row cannot cover the independently scrolling app. */
+  body:has(.app-shell){overflow:hidden}
+  .app-shell{height:calc(100dvh - 64px);min-height:0;overflow:auto;scroll-padding:16px}
+  .sidebar{height:calc(100dvh - 120px);bottom:64px}
+  .prototype-control{left:0;right:0;bottom:0;height:64px;padding:8px 16px;background:var(--color-shell);display:flex;justify-content:flex-end;align-items:center}
+  .prototype-trigger{min-height:44px;box-shadow:none}.prototype-popover{position:absolute;bottom:64px;right:8px;width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - 140px);overflow:auto}.prototype-options button,.prototype-reset{min-height:44px}
+  .catalog-main .table-head{display:none}.catalog-main .table-row{grid-template-columns:1fr;gap:8px}.catalog-main .table-row>span{display:block!important}.catalog-main .table-row .badge{display:inline-flex!important}.catalog-main{padding:16px}
+  .context-actions{padding-bottom:24px}.dialog-body{padding:16px}.dialog-heading{align-items:flex-start}.ux-dialog{max-height:90dvh}
+  .button{max-width:100%;white-space:normal}.field-choice{min-height:44px}.tabs button{min-width:64px}.global-search{min-height:44px}.nav-item{min-height:44px}
+  .main-area .page-content{padding-bottom:24px}.action-row{gap:12px;flex-wrap:wrap}.action-row-right{flex-wrap:wrap}.intent-card{padding:20px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.plan-layout.plan-focused{grid-template-columns:minmax(0,1fr);max-width:1000px}

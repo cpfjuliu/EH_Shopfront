@@ -1,10 +1,13 @@
+import { Modal } from './Modal.jsx'
+import { EvidenceContent } from './Evidence.jsx'
+import { intentScenarios, interpretIntent, getScenario, scenarioScreen, scenarioRequirements } from './intentModel.js'
 import { AccessContext, useAccess, AccessGate, AccessHub, OwnerApprovals, DatasetDiscovery, DatasetDetail, RecommendedDatasets, DatasetTools } from './AccessExperience.jsx'
 import { accessTransition, restoreAccess } from './accessModel.js'
 import React, { useEffect, useRef, useState } from 'react'
 import { personaMeta } from './experienceFlows.js'
 import { chartData, dataProducts, governanceBackstage, userProfiles } from './mockData.js'
 
-import { Briefing, BusinessAnswer, ContractTests, PartnerOutcome, ResultsDashboard, ResultsEvidence } from './ResultsExperience.jsx'
+import { Briefing, BusinessAnswer, ContractTests, PartnerOutcome, ResultsDashboard } from './ResultsExperience.jsx'
 import { resultsContext, reproducibleSQL } from './resultsModel.js'
 
 import { personas, stars, getExperience, hasCapability, routeHash, parseRoute, createJourney, transition } from './experienceCapabilities.js'
@@ -126,8 +129,7 @@ function PrototypeControl({ persona, star, onPersona, onStar, onReset, onBacksta
 function SearchOverlay({ config, onClose, onPick }) {
   const [query,setQuery]=useState('')
   const results=config.search.filter(item=>(item.label+' '+item.description).toLowerCase().includes(query.toLowerCase()))
-  useEffect(()=>{const close=e=>{if(e.key==='Escape')onClose()};window.addEventListener('keydown',close);return()=>window.removeEventListener('keydown',close)},[onClose])
-  return <div className="overlay" onMouseDown={onClose}><div className="search-dialog" role="dialog" aria-modal="true" aria-label="Search this experience" onMouseDown={e=>e.stopPropagation()}><div className="search-dialog-input"><Icon name="search"/><input aria-label="Search this experience" autoFocus value={query} onChange={e=>setQuery(e.target.value)} placeholder={config.searchPlaceholder}/><button aria-label="Close search" onClick={onClose}><Icon name="close"/></button></div><div className="search-results">{results.map(item=><button key={item.route} onClick={()=>{onPick(item.route);onClose()}}><div><strong>{item.label}</strong><span>{item.description}</span></div><Icon name="chevron"/></button>)}{!results.length && <p className="search-empty">No matches in this experience. Try Results, evidence or your current activity.</p>}</div></div></div>
+  return <Modal title="Search this experience" onClose={onClose}><div className="search-dialog-input"><input aria-label="Search this experience" value={query} onChange={e=>setQuery(e.target.value)} placeholder={config.searchPlaceholder}/></div><div className="search-results">{results.map(item=><button key={item.route} onClick={()=>{onClose();onPick(item.route)}}><div><strong>{item.label}</strong><span>{item.description}</span></div></button>)}{!results.length&&<p role="status" className="search-empty">No matches in this experience. Try Results, evidence or your current activity.</p>}</div></Modal>
 }
 
 function PageHeader({ title, subtitle, breadcrumbs = [], actions }) {
@@ -201,22 +203,31 @@ function ProductTabContent({ p, tab }) {
 
 function Meta({label,value}) { return <div className="meta-card"><span>{label}</span><strong>{value}</strong></div> }
 function Info({label,value}) { return <div className="info-block"><span>{label}</span><p>{value}</p></div> }
-function IntentScreen({ screen, onNext, onBack, loading, onQuestion }) {
-  const [prompt,setPrompt] = useState(screen.prompt)
-  return <div className="page-content intent-page"><PageHeader title="Home" />
-    <div className="intent-card"><div className="intent-eyebrow"><span className="spark-icon">✦</span>{screen.eyebrow}</div><h2>{screen.title}</h2><p>{screen.subtitle}</p>
-      <div className="prompt-box"><textarea aria-label={screen.title} value={prompt} onChange={e=>setPrompt(e.target.value)}/><div className="prompt-footer"><span>Uses approved data, policy and shared definitions</span><Button kind="primary" onClick={() => { if (screen.businessQuestion) onQuestion(prompt.trim()); onNext() }} disabled={loading || !prompt.trim()}>{loading ? 'Preparing…' : screen.primaryLabel}</Button></div></div>
-      <div className="suggestion-row">{screen.suggestions?.map(s => <button key={s} onClick={() => setPrompt(s)}>{s}</button>)}</div>
+function IntentScreen({ screen, config, onNext, onBack, loading, onQuestion, intentDraft, onIntent }) {
+  const bounded=config.star===9&&config.persona!=='business'
+  const examples=bounded?intentScenarios[config.persona]:null
+  const [prompt,setPrompt]=useState(intentDraft??screen.prompt)
+  const [unsupported,setUnsupported]=useState(false)
+  const change=value=>{setPrompt(value);setUnsupported(false);if(bounded)onIntent(value,false)}
+  const submit=()=>{
+    if(bounded){onIntent(prompt,true);if(!interpretIntent(config.persona,prompt)){setUnsupported(true);return}}
+    if(screen.businessQuestion)onQuestion(prompt.trim())
+    onNext()
+  }
+  return <div className="page-content intent-page"><PageHeader title={screen.title}/>
+    <div className="intent-card"><p>{bounded?'Choose an example or enter its wording. This prototype interprets only the listed scenarios.':screen.subtitle}</p>
+      <div className="prompt-box"><textarea aria-label={screen.title} value={prompt} onChange={e=>change(e.target.value)}/><div className="prompt-footer"><span>{bounded?'Bounded synthetic scenarios':'Uses approved data, policy and shared definitions'}</span><Button kind="primary" onClick={submit} disabled={loading||!prompt.trim()}>{loading?'Preparing…':screen.primaryLabel}</Button></div></div>
+      {unsupported&&<p role="alert">This prototype currently supports the example questions below. Choose one, or use its wording; your request has not been interpreted and no result was generated.</p>}
+      <div className="suggestion-row">{(examples?.map(s=>s.prompt)||screen.suggestions||[]).map(q=><button key={q} onClick={()=>change(q)}>{q}</button>)}</div>
     </div>
-    <ActionRow screen={{}} onBack={onBack}/>
   </div>
 }
 
 function PlanScreen({ screen, onNext, onBack, config, analysisLevel, onAnalysisLevel }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Edu Hub',screen.title]} />
     {screen.editable && hasCapability(config,'methodOverride') && <label className="form-field">Override analysis level<select value={analysisLevel} onChange={e=>onAnalysisLevel(e.target.value)}><option>All levels</option><option>Secondary 1</option><option>Secondary 2</option></select><small>Your selection is carried into the generated SQL. Review cohort changes before attributing causes.</small></label>}
-    <div className="plan-layout"><div className="plan-table">{screen.rows.map(([label,value,note,status]) => <div className="plan-row" key={label+value}><div className="plan-label">{label}</div><div><strong>{value}</strong><span>{note}</span></div><Badge>{status}</Badge></div>)}</div>
-    <aside className="summary-panel"><h3>Review</h3>{screen.checks?.map(([label,value]) => <div className="summary-line" key={label}><span>{label}</span><Badge>{value}</Badge></div>)}</aside></div>
+    <div className={`plan-layout ${screen.checks?.length?'':'plan-focused'}`}><div className="plan-table">{screen.rows.map(([label,value,note,status]) => <div className="plan-row" key={label+value}><div className="plan-label">{label}</div><div><strong>{value}</strong><span>{note}</span></div><Badge>{status}</Badge></div>)}</div>
+    {!!screen.checks?.length&&<aside className="summary-panel"><h3>Review</h3>{screen.checks.map(([label,value]) => <div className="summary-line" key={label}><span>{label}</span><Badge>{value}</Badge></div>)}</aside>}</div>
     <ActionRow screen={screen} onNext={onNext} onBack={onBack}/>
   </div>
 }
@@ -243,10 +254,9 @@ function WorkspaceScreen({ screen, onBack, config, analysisLevel = 'All levels' 
   const [detail,setDetail] = useState(null)
   const execute = () => { setRun(code === generated && !screen.manual); setMessage(code === generated && !screen.manual ? 'Synthetic preview refreshed. No database query was executed.' : 'SQL saved for review. This prototype has no SQL execution backend; edited queries cannot produce new results.') }
 
-  return <div className="page-content workspace-page"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Workspace',screen.title]} actions={<><Button>Share</Button><Button kind="primary" onClick={execute}>Run all</Button></>} />
-    <ResultsEvidence compact/>
+  return <div className="page-content workspace-page"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Workspace',screen.title]} />
     <div className="editor-shell"><aside className="editor-left"><div className="editor-panel-head">Analysis assets <span>＋</span></div><span className="editor-file active">01_analysis.sql</span><button className="editor-file" onClick={()=>setDetail(detail==='definition'?null:'definition')}>Definitions</button><button className="editor-file" onClick={()=>setDetail(detail==='lineage'?null:'lineage')}>Lineage</button></aside>
-    <main className="editor-main">{detail && <div className="panel-card"><h3>{detail==='definition'?'Metric and assumptions':'Results lineage'}</h3><p>{detail==='definition'?resultsContext.definition+' '+resultsContext.methodology:'School Results System → finality, subject-code and duplicate validation → Student Academic Results v1.2 → authorised HQ workspace. Student Identity v1.8 supplies governed school and level context. Two delayed submissions are excluded.'}</p></div>}<div className="editor-toolbar"><Button kind="primary" onClick={execute}>Run</Button>{screen.badges?.map(b => <Badge key={b}>{b}</Badge>)}<span className="saved-state">Saved just now</span></div><label className="sql-label">Review and edit SQL<textarea className="code-editor sql-editor" value={code} onChange={e=>{setCode(e.target.value);setRun(false)}}/></label>{message && <p role="status">{message}</p>}<div className="editor-results">{!run ? <div className="result-placeholder">Write or review SQL, then select Run. Execution is simulated.</div> : analysisLevel !== 'All levels' ? <div className="result-placeholder">SQL scoped to {analysisLevel}. Review and execute in an approved workspace; no scoped result fixture is supplied.</div> : screen.chart ? <BarChart name={screen.chart}/> : screen.resultRows ? <SimpleTable columns={screen.resultColumns} rows={screen.resultRows}/> : <div className="result-placeholder">Run the analysis to refresh results.</div>}</div></main>
+    <main className="editor-main">{detail && <div className="panel-card"><h3>{detail==='definition'?'Metric and assumptions':'Results lineage'}</h3><p>{detail==='definition'?resultsContext.definition+' '+resultsContext.methodology:'School Results System → finality, subject-code and duplicate validation → Student Academic Results v1.2 → authorised HQ workspace. Student Identity v1.8 supplies governed school and level context. Two delayed submissions are excluded.'}</p></div>}<div className="editor-toolbar"><Button kind="primary" onClick={execute}>Run</Button>{screen.badges?.map(b => <Badge key={b}>{b}</Badge>)}<span className="saved-state">Saved just now</span></div><label className="sql-label">Review and edit SQL<textarea className="code-editor sql-editor" value={code} onChange={e=>{setCode(e.target.value);setRun(false)}}/></label>{message && <p role="status">{message}</p>}<div className="editor-results">{!run ? <div className="result-placeholder">Write or review SQL, then select Run. Execution is simulated.</div> : analysisLevel !== 'All levels' && !screen.scopedFixture ? <div className="result-placeholder">SQL scoped to {analysisLevel}. Review and execute in an approved workspace; no scoped result fixture is supplied.</div> : screen.chart ? <BarChart name={screen.chart}/> : screen.resultRows ? <SimpleTable columns={screen.resultColumns} rows={screen.resultRows}/> : <div className="result-placeholder">Run the analysis to refresh results.</div>}</div></main>
     {hasCapability(config,'starterSql') && <aside className="assistant-panel"><div className="editor-panel-head">Analysis notes</div><div className="assistant-message">{screen.assistant}</div><div className="assistant-input">Review the method, definitions and lineage before use.</div></aside>}</div>
     <ActionRow screen={{}} onBack={onBack}/>
   </div>
@@ -319,7 +329,7 @@ function ControlledScreen({ screen, onBack }) {
 
 function ConsumerHealth({ screen, onNext, onBack }) {
   return <div className="page-content"><PageHeader title={screen.title} subtitle={screen.subtitle} breadcrumbs={['Developer','Consumers',screen.title]} />
-    <div className="api-layout"><div className="panel-card"><h3>Business contracts</h3>{screen.contracts.map(([name,copy])=><div className="contract-health" key={name}><div className="check-circle"><Icon name="check"/></div><div><strong>{name}</strong><span>{copy}</span></div></div>)}</div><aside className="summary-panel"><h3>Consumer health</h3>{screen.facts.map(([l,v])=><div className="summary-line" key={l}><span>{l}</span><strong>{v}</strong></div>)}</aside></div><ActionRow screen={screen} onNext={onNext} onBack={onBack}/></div>
+    <div className="api-layout"><div className="panel-card"><h3>Business contracts</h3>{screen.contracts.map(([name,copy])=><div className="contract-health" key={name}><div className="check-circle"><Icon name="check"/></div><div><strong>{name}</strong><span>{copy}</span></div></div>)}</div><aside className="summary-panel"><h3>Consumer health</h3>{screen.facts.map(([l,v])=><div className="summary-line" key={l}><span>{l}</span><strong>{v}</strong></div>)}</aside></div><details className="secondary-disclosure"><summary>Platform change details</summary><Button onClick={onNext}>{screen.primaryLabel}</Button></details></div>
 }
 
 function ChangeScreen({ screen, onNext, onBack }) {
@@ -350,11 +360,8 @@ function GovernanceScreen({ onBack }) {
   </div>
 }
 
-function ScopeEvidence({ config, onBack }) {
-  const partner=config.persona==='partner'
-  const product=dataProducts.results
-  const rows=partner ? [['Approved purpose','Academic programme evaluation'],['MOE sponsor','Programme owner'],['Method','Approved aggregate 2025–2026 comparison; no causal claim'],['Disclosure','Raw marks and direct identifiers stay within MOE'],['Expiry','180 days; sponsor renewal required'],['Controls','Pseudonymisation, minimum cohort size 10, query audit and restricted exports']] : [['Authoritative source',product.source],['Owner',product.owner],['Freshness',product.freshness+' · '+product.lastValidated],['Quality',resultsContext.quality],['Sensitivity','Sensitive source records; access is limited to the permitted purpose'],['Definition',resultsContext.definition],['Assumptions',resultsContext.methodology],['Permitted use',config.persona==='business'?'Authorised aggregate business views':config.persona==='system'?'Registered workload identity and contracted fields':'Approved analytical purpose and workspace entitlement']]
-  return <div className="page-content"><PageHeader title={partner?'Purpose, evidence & controls':'Definitions, evidence & quality'} subtitle="Context for your current experience"/><div className="panel-card">{rows.map(([l,v])=><Info key={l} label={l} value={v}/>)}</div><ActionRow screen={{}} onBack={onBack}/></div>
+function ScopeEvidence({ onBack }) {
+  return <div className="page-content"><PageHeader title="Evidence & methodology"/><EvidenceContent/><ActionRow screen={{}} onBack={onBack}/></div>
 }
 
 function ExperienceHelp({ config, onBack }) {
@@ -379,6 +386,7 @@ function Experience({ config, onLogout, backstage, setBackstage, scenario }) {
   const sessionId=useRef(crypto.randomUUID())
   const [loading,setLoading]=useState(false)
   const [searchOpen,setSearchOpen]=useState(false)
+  const [evidenceOpen,setEvidenceOpen]=useState(false)
   const cancelPending=()=>{clearTimeout(timer.current);setLoading(false)}
   const dispatch=action=>{
     const previous=current.current
@@ -395,15 +403,15 @@ function Experience({ config, onLogout, backstage, setBackstage, scenario }) {
     const requested=parseRoute(config,window.location.hash)
     dispatch({type:'HISTORY',route:requested})
     const restore=()=>{
-      cancelPending();setSearchOpen(false);setBackstage(false)
+      cancelPending();setSearchOpen(false);setEvidenceOpen(false);setBackstage(false)
       const foreignSession=window.history.state?.session && window.history.state.session!==sessionId.current
       dispatch({type:'HISTORY',route:foreignSession?config.landing:parseRoute(config,window.location.hash)})
     }
-    const keyboard=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();setSearchOpen(true)}}
+    const keyboard=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();if(!document.querySelector('dialog[open]'))setSearchOpen(true)}}
     window.addEventListener('popstate',restore);window.addEventListener('hashchange',restore);window.addEventListener('keydown',keyboard)
     return()=>{clearTimeout(timer.current);window.removeEventListener('popstate',restore);window.removeEventListener('hashchange',restore);window.removeEventListener('keydown',keyboard)}
   },[config])
-  useEffect(()=>{if(backstage){cancelPending();setSearchOpen(false)}},[backstage])
+  useEffect(()=>{if(backstage){cancelPending();setSearchOpen(false);setEvidenceOpen(false)}},[backstage])
   const navigate=route=>{cancelPending();setBackstage(false);dispatch({type:'NAVIGATE',route})}
   const next=()=>{
     if(loading)return
@@ -415,19 +423,28 @@ function Experience({ config, onLogout, backstage, setBackstage, scenario }) {
     } else dispatch({type:'NEXT',source})
   }
   const back=()=>{cancelPending();dispatch({type:'BACK'})}
-  let screen=config.routes[state.route].screen
+  const activeScenario=getScenario(config.persona,state.scenarioId)
+  let screen=scenarioScreen(config.routes[state.route].screen,config,activeScenario,state.analysisLevel)
+  const requirements=scenarioRequirements(config,screen,activeScenario,config.routes[state.route].requires)
+  const accessDestination=state.accessDestination||config.landing
+  const accessScreen=scenarioScreen(config.routes[accessDestination].screen,config,activeScenario,state.analysisLevel)
+  const accessRequirements=scenarioRequirements(config,accessScreen,activeScenario,config.routes[accessDestination].requires)||config.requiredAccess
   if(hasCapability(config,'manualDelivery') && screen.kind==='api' && state.delivery!=='REST API') screen={...screen,title:state.delivery+' integration',code:state.delivery==='Direct query'?'-- Use your approved workload identity in the authorised query environment.\nSELECT student_id, subject, academic_year, passed\nFROM edu_hub.student_academic_results\nWHERE academic_year = 2026;':'Secure managed file delivery\nSchedule: daily at 6:15 PM\nFormat: approved fields only; manifest includes freshness status\nIdentity: registered application\nExpired entitlement: delivery stopped',facts:[['Delivery',state.delivery],['Freshness','Daily'],['Entitlement','Registered application only'],['Data','Contracted minimum fields']]}
-  const props={config,selectedDataset:state.selectedDataset,onSelectDataset:value=>dispatch({type:'DATASET',source:state.route,value}),onNavigate:navigate,onNext:next,onBack:back,loading,question:state.question,onQuestion:value=>dispatch({type:'QUESTION',source:state.route,value}),analysisLevel:state.analysisLevel,onAnalysisLevel:value=>dispatch({type:'LEVEL',source:state.route,value}),delivery:state.delivery,onDelivery:value=>dispatch({type:'DELIVERY',source:state.route,value})}
-  return <AccessContext.Provider value={{access,send,navigate,config}}><div className="app-shell" data-experience={config.scope} data-route={state.route}>
+  const props={config,intentDraft:state.intentDraft,onIntent:(value,submit)=>dispatch({type:'INTENT',source:state.route,value,submit}),selectedDataset:state.selectedDataset,onSelectDataset:value=>dispatch({type:'DATASET',source:state.route,value}),onNavigate:navigate,onNext:next,onBack:back,loading,question:state.question,onQuestion:value=>dispatch({type:'QUESTION',source:state.route,value}),analysisLevel:state.analysisLevel,onAnalysisLevel:value=>dispatch({type:'LEVEL',source:state.route,value}),delivery:state.delivery,onDelivery:value=>dispatch({type:'DELIVERY',source:state.route,value})}
+  return <AccessContext.Provider value={{access,send,navigate,config,activeScenario,analysisLevel:state.analysisLevel,requirements,accessRequirements,accessDestination,accessTargetKind:accessScreen.kind,evidenceProductId:screen.productId||(['datasetDetail','datasetTools'].includes(screen.kind)?state.selectedDataset:'results'),evidenceContext:activeScenario?.goal||state.question||screen.title}}><div className="app-shell" data-experience={config.scope} data-route={state.route}>
     <Topbar config={config} onSearch={()=>setSearchOpen(true)} onNavigate={navigate} onLogout={onLogout}/>
     <Sidebar config={config} route={state.route} onNavigate={navigate}/>
     <main className="main-area">
       {backstage ? <GovernanceScreen onBack={()=>setBackstage(false)}/> : <>
-        <React.Fragment key={state.route}><AccessGate requirements={config.routes[state.route].requires}>{renderScreen(screen,props)}</AccessGate></React.Fragment>
-        <nav className="context-actions" aria-label="Supporting context">{config.actions.filter(action=>action.route!==state.route).map(action=><button key={action.id} onClick={()=>navigate(action.route)}>{action.label}</button>)}</nav>
+        <React.Fragment key={state.route}><AccessGate requirements={requirements}>{renderScreen(screen,props)}</AccessGate></React.Fragment>
+        <nav key={`context-${state.route}`} className="context-actions" aria-label="Supporting context">
+          {state.route!=='evidence'&&<button onClick={()=>setEvidenceOpen(true)}>Evidence & methodology</button>}
+          {config.actions.some(a=>a.id!=='evidence'&&a.route!==state.route)&&<details><summary>More options</summary><div>{config.actions.filter(a=>a.id!=='evidence'&&a.route!==state.route).map(action=><button key={action.id} onClick={()=>navigate(action.route)}>{action.label}</button>)}</div></details>}
+        </nav>
         {state.route===config.landing && config.home.cards.length>0 && <section className="experience-recents" aria-label="Recently used">{config.home.cards.map(card=><button className="recent-card" key={card.route} onClick={()=>navigate(card.route)}><span>Recently used</span><strong>{card.label}</strong></button>)}</section>}
       </>}
     </main>
+    {evidenceOpen&&<Modal title="Evidence & methodology" onClose={()=>setEvidenceOpen(false)}><EvidenceContent/></Modal>}
     {searchOpen && <SearchOverlay config={config} onClose={()=>setSearchOpen(false)} onPick={navigate}/>}
   </div></AccessContext.Provider>
 }

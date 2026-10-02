@@ -74,6 +74,13 @@ try {
     await route('help');await stable(c)
     for(const action of c.actions) {
       await page.locator('.sidebar').getByRole('button',{name:c.navigation[0].label,exact:true}).click()
+      if(action.id==='evidence') {
+        await button('Evidence & methodology').click()
+        await page.getByRole('dialog',{name:'Evidence & methodology'}).waitFor()
+        assert((await page.locator('.evidence-detail').innerText()).length>100)
+        await page.keyboard.press('Escape');await stable(c);continue
+      }
+      await page.locator('.context-actions summary').click()
       await page.locator('.context-actions').getByRole('button',{name:action.label,exact:true}).click()
       await route(action.route);await stable(c)
       if(action.route==='source-product') assert.equal(await button('Request access').count(),0)

@@ -1,21 +1,9 @@
 import React, { useState } from 'react'
-import { answerQuestion, dashboardRows, questions, resultsContext, resultsEvidence, schoolResults } from './resultsModel.js'
+import { answerQuestion, dashboardRows, questions, resultsContext, schoolResults } from './resultsModel.js'
 
 const Button = ({ children, onClick, primary=false, disabled=false }) => <button className={`button button-${primary ? 'primary' : 'secondary'}`} onClick={onClick} disabled={disabled}>{children}</button>
 const Header = ({ title, subtitle }) => <div className="page-header"><div><h1>{title}</h1><p>{subtitle}</p></div></div>
 const Table = ({ columns, rows }) => <div className="results-table-wrap"><table className="results-table"><thead><tr>{columns.map(c=><th key={c}>{c}</th>)}</tr></thead><tbody>{rows.map((row,i)=><tr key={i}>{row.map((v,j)=><td key={j}>{v}</td>)}</tr>)}</tbody></table></div>
-export function ResultsEvidence({ compact=false, explanation }) {
-  const [open, setOpen] = useState(null)
-  const panels = {
-    'Why this answer?': explanation || 'Compare final 2026 and 2025 results on the same subject, school and level basis. The synthetic fixture uses equal cohort weights; two delayed schools are excluded. Inspect the method before interpreting differences.',
-    'What data was used?': resultsEvidence[2][1] + ' Authoritative source: approved School Results System submissions. Owner: Academic Data Domain. Validated today at 6:03 PM. Sensitive student data is aggregated for business use.',
-    'Show assumptions': resultsContext.definition + ' ' + resultsContext.methodology + ' ' + resultsContext.quality,
-  }
-  return <div className="transparency-wrap">
-    <div className="transparency-actions">{(compact?['Evidence & methodology']:Object.keys(panels)).map(label=><button key={label} aria-expanded={open===label} onClick={()=>setOpen(open===label?null:label)}>{label}</button>)}</div>
-    {open && <div className="panel-card evidence-detail"><h3>{open}</h3>{compact ? resultsEvidence.map(([l,v])=><p key={l}><strong>{l}: </strong>{v}</p>) : <p>{panels[open]}</p>}</div>}
-  </div>
-}
 
 export function ResultsDashboard({ screen, onBack }) {
   const [subject,setSubject]=useState(screen.prepared?'All subjects':'Mathematics')
@@ -30,7 +18,7 @@ export function ResultsDashboard({ screen, onBack }) {
     <p className="body-copy">{resultsContext.definition}</p>
     <Table columns={period==='Compare years'?['School / subject','2025','2026','Change']:['School / subject',period]} rows={shown}/>
     <p className="body-copy">{resultsContext.quality} Subject summaries use equally weighted school averages.</p>
-    <ResultsEvidence compact/><Button onClick={onBack}>Back</Button>
+    <Button onClick={onBack}>Back</Button>
   </div>
 }
 
@@ -44,10 +32,10 @@ export function BusinessAnswer({ screen, onNext, onBack, question, onQuestion })
       <div className="metric-grid">{answer.metrics.map(([l,v])=><div className="metric-card" key={l}><span>{l}</span><strong>{v}</strong></div>)}</div>
       {answer.rows && <Table columns={answer.columns||['School','2025','2026','Change']} rows={answer.rows}/>}
     </div>
-    <p className="body-copy">{resultsContext.quality}</p><ResultsEvidence explanation={answer.unsupported ? 'No answer was computed: this question is outside the supported synthetic examples. No additional data or access was inferred.' : `${answer.body} The comparison uses the same authorised fixture and period throughout; no causal explanation is inferred.`}/>
+    <p className="body-copy">{resultsContext.quality}</p>
     <form className="question-compose" onSubmit={e=>{e.preventDefault();ask(draft)}}><label htmlFor="follow-up">Ask a follow-up</label><div><input id="follow-up" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Ask about these Results…"/><button className="button button-primary" disabled={!draft.trim()}>Ask follow-up</button></div></form>
-    <div className="suggestion-row">{questions.map(q=><button key={q} onClick={()=>ask(q)}>{q}</button>)}</div>
-    <div className="action-row"><Button onClick={onBack}>Back</Button><Button primary onClick={onNext}>{screen.primaryLabel}</Button></div>
+    <details className="secondary-disclosure"><summary>Example follow-ups</summary><div className="suggestion-row">{questions.map(q=><button key={q} onClick={()=>ask(q)}>{q}</button>)}</div></details>
+    <div className="action-row"><Button onClick={onBack}>Back</Button></div>
   </div>
 }
 
@@ -55,26 +43,26 @@ export function Briefing({ screen, onNext, onQuestion }) {
   const [draft,setDraft]=useState('')
   const explore=q=>{onQuestion(q);onNext()}
   return <div className="page-content briefing-page"><Header {...screen}/>
-    <div className="badge-row"><span className="badge badge-success">Refreshed today · 6:04 PM</span><span className="badge badge-neutral">Synthetic prototype</span></div>
+    <div className="badge-row"><span className="badge badge-success">Simulated refresh · 6:04 PM</span><span className="badge badge-neutral">Synthetic prototype</span></div>
     <section className="answer-card briefing-card"><div className="eyebrow">{screen.audience==='analyst'?'Three changes since your last analysis':'What matters for your leadership briefing'}</div>
       <h2>Mathematics needs attention; English is improving.</h2>
       <div className="briefing-development"><strong>Mathematics pass rates declined in 8 schools.</strong><p>School A shows the largest change: 84% to 76% (−8 pp).</p></div>
       <div className="briefing-development"><strong>Most of the decline is concentrated in Secondary 2.</strong><p>Review cohort differences before drawing conclusions about causes.</p></div>
       <div className="briefing-development"><strong>English improved across the eight current schools.</strong><p>The comparable school average rose 3 pp, from 85% to 88%.</p></div>
       <p className="briefing-caveat">Two delayed submissions are excluded. Findings cover your authorised schools, with 2026 compared with 2025.</p>
-      <div className="briefing-actions">{screen.audience==='analyst'?<Button primary onClick={onNext}>Open reproducible analysis</Button>:<><Button primary onClick={()=>explore('Which levels account for the decline?')}>Explore drivers</Button><Button onClick={()=>explore('Compare subjects')}>Compare subjects</Button></>}</div>
+      <div className="briefing-actions">{screen.audience==='analyst'?<Button primary onClick={onNext}>Open reproducible analysis</Button>:<><Button primary onClick={()=>explore('Which levels account for the decline?')}>Explore drivers</Button></>}</div>
     </section>
-    <ResultsEvidence compact/>
-    {screen.audience==='business' && <form className="question-compose" onSubmit={e=>{e.preventDefault();if(draft.trim())explore(draft.trim())}}><label htmlFor="briefing-follow-up">Explore this briefing</label><div><input id="briefing-follow-up" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What is driving School A?"/><button className="button button-secondary" disabled={!draft.trim()}>Ask follow-up</button></div><div className="suggestion-row"><button type="button" onClick={()=>explore('What is driving School A?')}>What is driving School A?</button></div></form>}
+
+    {screen.audience==='business' && <details className="secondary-disclosure"><summary>Ask about this briefing</summary><form className="question-compose" onSubmit={e=>{e.preventDefault();if(draft.trim())explore(draft.trim())}}><label htmlFor="briefing-follow-up">Explore this briefing</label><div><input id="briefing-follow-up" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="What is driving School A?"/><button className="button button-secondary" disabled={!draft.trim()}>Ask follow-up</button></div><div className="suggestion-row"><button type="button" onClick={()=>explore('Compare subjects')}>Compare subjects</button><button type="button" onClick={()=>explore('What is driving School A?')}>What is driving School A?</button></div></form></details>}
   </div>
 }
 
 export function PartnerOutcome({ screen, onNext }) {
-  return <div className="page-content briefing-page"><Header {...screen}/><div className="answer-card"><span className="badge badge-success">Approved aggregate outcome</span><h2>Participants improved by 4 pp; the comparison cohort improved by 1 pp.</h2><p>This descriptive comparison is ready inside MOE boundaries. It does not establish that the programme caused the difference.</p><p>Matched 2025–2026 cohorts · minimum group size 10 · synthetic example. Direct identifiers and raw marks remain within MOE.</p><Button primary onClick={onNext}>{screen.primaryLabel}</Button></div></div>
+  return <div className="page-content briefing-page"><Header {...screen}/><div className="answer-card"><span className="badge badge-success">Approved aggregate outcome</span><h2>Participants improved by 4 pp; the comparison cohort improved by 1 pp.</h2><p>This descriptive comparison is ready inside MOE boundaries. It does not establish that the programme caused the difference.</p><p>Matched 2025–2026 cohorts · minimum group size 10 · synthetic example. Direct identifiers and raw marks remain within MOE.</p><details className="secondary-disclosure"><summary>Explore approved comparison</summary><Button onClick={onNext}>{screen.primaryLabel}</Button></details></div></div>
 }
 
 export function ContractTests({ screen, onBack }) {
   const [scenario,setScenario]=useState('Current response')
   const outcomes={'Current response':'Pass — contracted fields and current freshness accepted.','Delayed ≤24 hours':'Pass — last-known-good response returned with a visible stale warning.','Delayed >24 hours':'Blocked — no valid result within freshness contract.','Expired entitlement':'Denied — 403; cached student results must not be served.','Breaking schema change':'Blocked — major version migration and consumer approval required.'}
-  return <div className="page-content"><Header {...screen} subtitle="Interactive contract simulation · no live API calls"/><label className="form-field">Response scenario<select value={scenario} onChange={e=>setScenario(e.target.value)}>{Object.keys(outcomes).map(s=><option key={s}>{s}</option>)}</select></label><div className="panel-card" role="status">{outcomes[scenario]}</div><div className="action-row"><Button onClick={onBack}>Back</Button></div></div>
+  return <div className="page-content"><Header {...screen} subtitle={`${screen.delivery||'Contract'} · interactive simulation · no live API calls`}/><label className="form-field">Response scenario<select value={scenario} onChange={e=>setScenario(e.target.value)}>{Object.keys(outcomes).map(s=><option key={s}>{s}</option>)}</select></label><div className="panel-card" role="status">{outcomes[scenario]}</div><div className="action-row"><Button onClick={onBack}>Back</Button></div></div>
 }

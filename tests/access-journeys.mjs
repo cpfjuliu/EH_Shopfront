@@ -14,7 +14,7 @@ async function select(persona,star,scenario='First-time user') {
   await button(`${star}★`).click();await button(scenario).click();await page.locator('.prototype-trigger').click()
 }
 async function backstage(){await page.locator('.prototype-trigger').click();await button('Open data owner / governance backstage').click();await page.locator('.prototype-trigger').click()}
-async function openAccess(){await page.locator('.context-actions').getByRole('button',{name:'Data access',exact:true}).click()}
+async function openAccess(){await page.locator('.context-actions summary').click();await page.locator('.context-actions').getByRole('button',{name:'Data access',exact:true}).click()}
 async function nextRoute(previous){await page.waitForFunction(r=>document.querySelector('.app-shell').dataset.route!==r,previous)}
 try{
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:5173');await button('Continue with MOE SSO').click();await page.locator('.prototype-trigger').waitFor()
@@ -36,7 +36,7 @@ try{
       if(await next.isDisabled())break
       await next.click();await nextRoute(route)
     }
-    await openAccess();assert((await page.locator('.main-area').innerText()).includes('No approved fields yet'))
+    await openAccess();await page.getByText('Your approved access',{exact:true}).click();assert((await page.locator('.main-area').innerText()).includes('No approved fields yet'))
     console.log(`PASS first-time approval gate ${c.scope}`)
   }
   await select('business',5)
@@ -44,12 +44,14 @@ try{
   assert(await button('Use approved dataset').isDisabled())
   await button('Request dataset fields').click()
   await page.getByLabel('Reason',{exact:true}).fill('Compare academic outcomes using approved fields')
+  await page.getByText('View details and adjust fields',{exact:true}).click()
   await page.getByLabel('Student Identity: student_id',{exact:true}).check()
   await button('Submit common request').click()
   assert.equal(await page.locator('[data-owner-status="Pending"]').count(),2)
   await page.reload()
   await page.locator('[data-owner-status="Pending"]').first().waitFor()
   assert.equal(await page.locator('[data-owner-status="Pending"]').count(),2)
+  await page.getByText('Your approved access',{exact:true}).click()
   assert((await page.locator('.main-area').innerText()).includes('No approved fields yet'))
   await backstage()
   await button('Approve Student Academic Results').click()
@@ -86,6 +88,7 @@ try{
   await page.getByRole('heading',{name:'Approval needed before use'}).waitFor()
   await page.goBack()
   await button('Request recommended fields').click()
+  await page.getByText('View details and adjust fields',{exact:true}).click()
   while(await page.locator('.request-datasets input:checked:not(:disabled)').count())await page.locator('.request-datasets input:checked:not(:disabled)').first().uncheck()
   await page.getByLabel('Student Academic Results: subject',{exact:true}).check()
   await page.getByLabel('Reason',{exact:true}).fill('Understand the subject field')

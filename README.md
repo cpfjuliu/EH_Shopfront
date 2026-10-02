@@ -13,13 +13,24 @@ React/Vite prototype demonstrating 16 role-aware journeys using **Student Academ
 
 Each combination opens directly on its own starting experience. Business 9★ starts with Ask Edu Hub; Business 11★ starts with Your Academic Results Briefing. There is one primary navigation entry per combination. The bottom-right persona/star selector is a separate presenter control and is the only place that changes simulated identity or star.
 
+## UX interaction guidance
+
+The repository design source of truth is `docs/design/`; consult `AGENTS.md` before UI work.
+
+- Analyst, System and Partner 9★ interpret a small set of explicitly listed scenarios in `intentModel.js`. Matching is deterministic (normalized wording and documented aliases), not general AI. Unsupported input stays on the question screen. Hourly freshness is understood but rejected because the source is daily.
+- The interpreted goal, method and result follow the selected scenario. Protected Analyst/Partner findings require approved fields, including separate pseudonymous partner fields. Editing intent resets downstream journey grants.
+- Access starts with the persona's goal, retains the destination during owner approval and leads with Continue when ready. Technical field selection is disclosed progressively; approvals and expiry remain unchanged.
+- One contextual evidence pattern describes source/version, simulated refresh, coverage, calculation, owner, lineage, permitted use and caveats. Missing partner baselines/counts are explicitly unavailable, not invented.
+- Search and evidence use a shared native modal with inert background, focus containment, Escape and focus restoration. On narrow screens the presenter has a dedicated row outside the scrollable app.
+- Business 11★ has one primary exploration path; follow-ups and supporting tools are secondary. Healthy System 11★ requires no action. Business Q&A no longer repeats its visible school table through a primary “Show schools” action.
+
 ## Isolation model
 
 `experienceCapabilities.js` defines all 16 states, including navigation, routes, features, home cards, contextual actions, search results and notifications. Stars are independent interaction models rather than cumulative feature tiers. Screen content remains in `experienceFlows.js`.
 
 The shared transition function validates the scope and originating route of actions. Journey steps unlock sequentially; URLs and history cannot grant prerequisites. Hash routes carry persona/star for clarity but never change the selected experience. Switching the demo selector resets journey state, closes overlays, cancels pending transitions and creates a new history session. Reloading a protected route returns to the current landing.
 
-Business 11★ can inspect a supporting dashboard; Analyst 11★ can inspect a read-only source SDP. These are secondary evidence actions, not competing primary journeys. Governance backstage is available only from the demo control. Partner 5★/7★ receive controlled packages; Partner 9★ reviews minimisation before an aggregate result; Partner 11★ receives the approved outcome first.
+Business 11★ can inspect a supporting dashboard; Analyst 11★ can inspect a read-only source SDP. These are secondary evidence actions, not competing primary journeys. Governance backstage is available only from the demo control. Partner 5★/7★ receive controlled packages; Partner 9★ reviews minimisation before a scenario-specific aggregate result or approved pseudonymous package; Partner 11★ receives the approved outcome first.
 
 ## Trust and limitations
 
@@ -58,7 +69,7 @@ npm test
 
 Optional environment variables: `TEST_URL` (default `http://127.0.0.1:5173`) and `BROWSER_EXECUTABLE` (installed Chrome/Chromium executable). Screenshots go to ignored `test-results/`.
 
-`npm test` runs capability/access unit tests, all 16 returning-user journeys, the 16-combination isolation audit and all 16 first-time approval gates plus the complete owner-approval lifecycle. Run them individually with `npm run test:capabilities`, `npm run test:journeys`, `npm run test:isolation` and `npm run test:access`. Unit tests need no browser/server.
+`npm test` runs capability/access unit tests, all 16 returning-user journeys, the 16-combination isolation audit and all 16 first-time approval gates plus the complete owner-approval lifecycle. The included UX suite (also available as `npm run test:ux`) checks all supported/unsupported intent scenarios, retained access destinations, modal focus, contextual evidence and 320/390px layouts. Run the existing suites individually with `npm run test:capabilities`, `npm run test:journeys`, `npm run test:isolation` and `npm run test:access`. Unit tests need no browser/server.
 
 The journey suite checks SDP tabs, manual/prepared filters, reactive Q&A, proactive briefings, preserved context, analyst overrides, contract failures, partner expiry/denial, navigation, blank input, transition cancellation, mobile overflow, governance, logout and invalid stored preferences. The isolation suite exercises every scoped search result, notifications, contextual actions, recent cards, all foreign persona/star URLs, locked routes, reloads and browser back/forward. Browser runtime and console errors fail both suites. See `ISOLATION_AUDIT.md` for the acceptance matrix; the browser audit also writes ignored `test-results/isolation-audit.json` and 16 landing screenshots.
 

@@ -1,6 +1,6 @@
 # Reusable component rules
 
-Use existing patterns before adding variants. Current examples include `Button`, `Badge`, `Sidebar`, `PageHeader`, `SimpleTable` and `SearchOverlay` in `App.jsx`, tables and `ResultsEvidence` in `ResultsExperience.jsx`, and access flows in `AccessExperience.jsx`. These are reuse candidates, not a certification of compliance. Do not create another local variant when a suitable shared pattern can serve the task.
+Use existing patterns before adding variants. Current examples include `Button`, `Badge`, `Sidebar`, `PageHeader`, `SimpleTable` and `SearchOverlay` in `App.jsx`, tables in `ResultsExperience.jsx`, contextual `EvidenceContent` in `Evidence.jsx`, accessible `Modal` in `Modal.jsx`, and access flows in `AccessExperience.jsx`. These are reuse candidates, not a certification of compliance. Do not create another local variant when a suitable shared pattern can serve the task.
 
 Use the spacing and hierarchy rules in [principles](principles.md) and the interaction requirements in [accessibility](accessibility.md).
 

@@ -1,3 +1,5 @@
+import { interpretIntent, scenarioScreen } from '../intentModel.js'
+import { getExperience } from '../experienceCapabilities.js'
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import { chromium } from 'playwright'
@@ -31,9 +33,16 @@ try {
     await select(persona,star)
     const screens=experienceFlows[persona][star].screens
     for(let i=0;i<screens.length;i++) {
-      const screen=screens[i]
+      const screen=scenarioScreen(screens[i],getExperience(persona,star),star===9?interpretIntent(persona,screens[0].prompt):null)
       assert.equal(await page.locator('.app-shell').getAttribute('data-experience'),`${persona}/${star}`)
       await visible(page.locator('.main-area'))
+      await page.screenshot({path:`test-results/review-${persona}-${star}-${i}.png`,fullPage:true})
+      if(i===0){
+        await page.setViewportSize({width:390,height:844})
+        await page.screenshot({path:`test-results/review-${persona}-${star}-mobile.png`,fullPage:true})
+        assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
+        await page.setViewportSize({width:1440,height:1000})
+      }
       if(screen.kind==='intent') await visible(page.getByRole('heading',{name:screen.title,exact:true}))
       else await visible(page.getByRole('heading',{name:screen.title || 'Student Academic Results',exact:true}).first())
       if(screen.kind==='asset'||screen.kind==='contract') {
@@ -74,8 +83,9 @@ try {
         assert((await page.locator('.results-table').innerText()).includes('-12.0 pp'))
       }
       if(screen.kind==='businessAnswer') {
+        await page.getByText('Example follow-ups',{exact:true}).click()
         for(const q of questions) {await page.locator('.suggestion-row').getByRole('button',{name:q,exact:true}).click();assert(!(await page.locator('.answer-card').innerText()).includes('needs additional data'))}
-        for(const label of ['Why this answer?','What data was used?','Show assumptions']) {await button(label).click();assert((await page.locator('.evidence-detail').innerText()).length>100)}
+        await button('Evidence & methodology').click();assert((await page.locator('.evidence-detail').innerText()).length>100);await page.keyboard.press('Escape')
         await page.getByLabel('Ask a follow-up',{exact:true}).fill('Give me private student names')
         await button('Ask follow-up').click()
         await visible(page.getByRole('heading',{name:'This question needs additional data or clarification'}))
@@ -85,7 +95,8 @@ try {
         assert.equal(await page.locator('.briefing-development').count(),3)
         assert.equal(await page.getByRole('button',{name:'Create briefing',exact:true}).count(),0)
         await button('Evidence & methodology').click();await visible(page.locator('.evidence-detail'))
-        await button('Evidence & methodology').click()
+        await page.keyboard.press('Escape')
+        if(persona==='business')await page.getByText('Ask about this briefing',{exact:true}).click()
         await page.screenshot({path:`test-results/${persona}-${star}.png`,fullPage:true})
       }
       if(screen.kind==='contractTests') for(const scenario of ['Delayed ≤24 hours','Delayed >24 hours','Expired entitlement','Breaking schema change']) {
@@ -107,6 +118,9 @@ try {
       const forbidden=persona==='business'?['Generate analysis','Request system access','Propose minimum interaction']:persona==='analyst'?['Ask Edu Hub','Request system access','Propose minimum interaction']:persona==='system'?['Ask Edu Hub','Generate analysis','Propose minimum interaction']:['Ask Edu Hub','Generate analysis','Request system access']
       if(star===5) forbidden.push('Propose analytical method','Generate scaffold and tests','Recommend project package','Recommend integration')
       for(const name of forbidden) assert.equal(await page.locator('.main-area').getByRole('button',{name,exact:true}).count(),0,`${persona} ${star}: ${name} leaked`)
+      if(screen.kind==='businessAnswer')break
+      if(screen.kind==='consumerHealth')await page.getByText('Platform change details',{exact:true}).click()
+      if(screen.kind==='partnerOutcome')await page.getByText('Explore approved comparison',{exact:true}).click()
       if(i<screens.length-1) {
         if(screen.kind==='datasetDiscovery')await page.locator('.asset-card').filter({has:page.getByText('Student Academic Results',{exact:true})}).click()
         else await advance(screen)
@@ -130,16 +144,18 @@ try {
   await page.waitForTimeout(1000)
   await visible(page.getByRole('heading',{name:'Results Support App',exact:true}))
   await select('business',11)
+  await page.getByText('Ask about this briefing',{exact:true}).click()
   await button('Compare subjects').click()
   await visible(page.getByRole('heading',{name:'Mathematics declined while English improved'}))
   await button('Back').click()
+  await page.getByText('Ask about this briefing',{exact:true}).click()
   await button('What is driving School A?').click()
   await visible(page.getByRole('heading',{name:'School A: the largest change is in Secondary 2'}))
   await page.getByLabel('Ask a follow-up',{exact:true}).fill('What is driving the decline in School A?')
   await button('Ask follow-up').click()
   await visible(page.getByRole('heading',{name:'School A: the largest change is in Secondary 2'}))
-  await button('Inspect evidence & quality').click()
-  await button('Back').click()
+  await button('Evidence & methodology').click()
+  await page.keyboard.press('Escape')
   await visible(page.getByRole('heading',{name:'School A: the largest change is in Secondary 2'}))
   await page.getByLabel('Ask a follow-up',{exact:true}).fill('Show me whether this is concentrated in a particular level.')
   await button('Ask follow-up').click()

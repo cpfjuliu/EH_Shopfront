@@ -106,7 +106,7 @@ export const experienceFlows = {
           "kind": "intent",
           "title": "What do you want to understand?",
           "eyebrow": "Academic Results",
-          "prompt": "Which subjects show the largest year-on-year decline?",
+          "prompt": "Mathematics year-on-year decline",
           "primaryLabel": "Propose analytical method",
           "subtitle": "Describe your need using the synthetic Academic Results scenario."
         },

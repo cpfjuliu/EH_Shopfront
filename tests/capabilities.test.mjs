@@ -35,6 +35,7 @@ for(const persona of personas) for(const [index,star] of stars.entries()) test(`
     assert.equal(transition(c,state,{type:'NEXT',scope:c.scope}),state,'Ask first')
     state=transition(c,state,{type:'QUESTION',scope:c.scope,value:'Which schools declined?'})
   }
+  if(star===9&&persona!=='business')state=transition(c,state,{type:'INTENT',scope:c.scope,value:c.routes[c.landing].screen.prompt,submit:true})
   while(c.routes[state.route].next) {
     const previous=state
     state=transition(c,state,{type:'NEXT',scope:c.scope,source:state.route})

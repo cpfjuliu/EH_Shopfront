@@ -1,3 +1,4 @@
+import { interpretIntent, getScenario } from './intentModel.js'
 import { resultFields, requestDatasets } from './accessModel.js'
 import { experienceFlows } from './experienceFlows.js'
 
@@ -51,6 +52,7 @@ function createExperience(persona, star, definition) {
   for(const route of Object.values(routes)) {
     const kind=route.screen.kind
     if(['briefing','businessAnswer','resultsDashboard','dashboardDetail','workspace','progress','controlled','partnerOutcome','consumerHealth','change'].includes(kind)||(kind==='table'&&persona==='business')||(kind==='api'&&route.id!=='step-1')) route.requires=baseRequirements
+    if(star===9&&['analyst','partner'].includes(persona)&&kind==='plan')route.requires=baseRequirements
     if(kind==='controlled'&&route.screen.subset)route.requires={results:['participant_token','level','results_band']}
   }
   const actions = [
@@ -92,7 +94,7 @@ export function parseRoute(config, hash) {
   return match && `${match[1]}/${match[2]}`===config.scope && Object.hasOwn(config.routes,match[3]) ? match[3] : config.landing
 }
 export function createJourney(config) {
-  return {scope:config.scope,route:config.landing,unlocked:[config.landing],trail:[],question:'',selectedDataset:'results',analysisLevel:'All levels',delivery:'REST API',historyMode:'replace'}
+  return {scope:config.scope,route:config.landing,unlocked:[config.landing],trail:[],question:'',selectedDataset:'results',analysisLevel:'All levels',delivery:'REST API',intentDraft:null,scenarioId:null,accessDestination:null,historyMode:'replace'}
 }
 export function canVisit(config, state, route) {
   return state.scope===config.scope && Object.hasOwn(config.routes,route) && (config.routes[route].public || state.unlocked.includes(route))
@@ -104,12 +106,19 @@ export function canVisit(config, state, route) {
 export function transition(config, state, action) {
   if (action.scope!==config.scope || state.scope!==config.scope) return state
   if (action.source && action.source!==state.route) return state
+  if(action.type==='INTENT') {
+    if(config.star!==9||config.persona==='business'||config.routes[state.route].screen.kind!=='intent'||typeof action.value!=='string')return state
+    const scenario=action.submit?interpretIntent(config.persona,action.value):null
+    return {...state,intentDraft:action.value,scenarioId:scenario?.id||null,analysisLevel:'All levels',unlocked:[config.landing],trail:[]}
+  }
   if(action.type==='DATASET')return hasCapability(config,'datasetChat')&&requestDatasets(config.persona).some(d=>d.id===action.value)?{...state,selectedDataset:action.value}:state
   if (action.type==='QUESTION') return hasCapability(config,'businessQuestions') && typeof action.value==='string' ? {...state,question:action.value} : state
   if (action.type==='LEVEL') return hasCapability(config,'methodOverride') && ['All levels','Secondary 1','Secondary 2'].includes(action.value) ? {...state,analysisLevel:action.value} : state
   if (action.type==='DELIVERY') return hasCapability(config,'manualDelivery') && ['REST API','Direct query','Managed file'].includes(action.value) ? {...state,delivery:action.value} : state
   if (action.type==='NEXT') {
+    if(config.star===9&&config.routes[state.route].screen.kind==='plan'&&getScenario(config.persona,state.scenarioId)?.unmet)return state
     const next=config.routes[state.route]?.next
+    if(config.star===9&&config.persona!=='business'&&config.routes[state.route].screen.kind==='intent'&&!state.scenarioId)return state
     if (!next || (config.routes[state.route].screen.businessQuestion && !state.question.trim())) return state
     return {...state,route:next,unlocked:[...new Set([...state.unlocked,next])],trail:[...state.trail,state.route],historyMode:'push'}
   }
@@ -119,7 +128,7 @@ export function transition(config, state, action) {
   }
   if (action.type==='NAVIGATE' || action.type==='HISTORY') {
     const route=canVisit(config,state,action.route)?action.route:config.landing
-    return {...state,route,trail:action.type==='HISTORY'?[]:[...state.trail,state.route],historyMode:action.type==='HISTORY'?'replace':'push'}
+    return {...state,route,accessDestination:route==='access'&&state.route!=='access'?state.route:state.accessDestination,trail:action.type==='HISTORY'?[]:[...state.trail,state.route],historyMode:action.type==='HISTORY'?'replace':'push'}
   }
   return state
 }
