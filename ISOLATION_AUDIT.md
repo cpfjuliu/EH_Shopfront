@@ -1,46 +1,24 @@
-# Persona and star isolation audit
+# Active target experience boundaries
 
-The prototype preserves the existing palette, layout, synthetic Academic Results fixtures, SDP metadata and governance backstage. Isolation is enforced by the central capability model and shared route/action reducer, not scattered star checks.
+The 17 October 2026 rebuild replaces the old 16-combination audit. Business and System share discovery, EDPs, scope and My Data. Request intent selects DIP Lite/dashboard or integration; presenter perspective is not the entitlement mechanism.
 
-## Acceptance matrix
+## Acceptance boundaries
 
-| Persona | Star | Isolated starting experience | Journey and isolation |
-| --- | --- | --- | --- |
-| Business | 5 | Discover datasets/dashboards; request fields; use dataset-scoped chat and analysis | PASS |
-| Business | 7 | Describe a need; receive datasets/dashboard and access steps; then chat and analyse | PASS |
-| Business | 9 | Ask Edu Hub; submit before any answer appears | PASS |
-| Business | 11 | Personalised Results briefing; explore with retained context | PASS |
-| Analyst | 5 | Catalogue, SDP, access request, manual SQL | PASS |
-| Analyst | 7 | Describe analysis; assemble products, joins and workspace | PASS |
-| Analyst | 9 | Propose method, review quality, override level, generate SQL | PASS |
-| Analyst | 11 | Refreshed findings first; drill into reproducible analysis | PASS |
-| Developer | 5 | Inspect contract, select delivery, request access, integrate | PASS |
-| Developer | 7 | Describe application; coordinate integration provisioning | PASS |
-| Developer | 9 | State requirement; review contract, scaffold and failure tests | PASS |
-| Developer | 11 | Stable business contract health and consumer impact | PASS |
-| Partner | 5 | Approved purpose request and controlled subset | PASS |
-| Partner | 7 | Describe approved need; receive recommended sample package | PASS |
-| Partner | 9 | Review minimisation before controlled comparison | PASS |
-| Partner | 11 | Approved aggregate outcome first; inspect controls | PASS |
-
-## Automated checks
-
-- First-time approval gates tested across all 16 combinations in addition to the returning-user journeys. Discovery metadata stays available; protected consumption and provisioning require approved fields.
-- A single request carries fields from multiple datasets to their respective owners. Separate approval/denial decisions grant only approved fields immediately. The test continues into Business 5 chat, follow-up questions and analysis, then expires access and verifies data disappears.
-- Business 7 partial field approval permits dataset explanations but cannot unlock calculations requiring additional fields. Request form mobile layout is checked.
-
-- All 16 capability states: explicit landing kinds, one primary navigation entry, only scoped surface destinations, sequential grants, foreign/stale action rejection, feature-specific overrides, invalid preference fallback.
-- All 16 complete journeys: normal actions preserve persona/star; foreign primary actions are absent; manual analysis has no generated assistant; partner packages do not show outcome metrics; reactive answers require submission.
-- All 16 shell audits: navigation, cards, search and its empty state, keyboard search, notifications, help, recent items and contextual drill-downs.
-- Every other persona/star URL tested from every selected state (240 foreign combinations), plus each locked step, malformed and backstage URLs. None changes the selected experience or unlocks a step.
-- Reloads clear step grants. Browser back/forward works within the current session and cannot restore another selection's screens.
-- Pending transitions are cancelled on a selector change. Business briefing follow-ups retain the period and question across an evidence detour.
-- SDP Schema, Delivery, Versions, Consumers, Lineage, Quality and Access remain populated; governance remains behind the demo control.
-- Degraded fixtures retained: delayed submissions, excluded records, stale contract responses, expired entitlement, denied access and breaking schemas.
-- Desktop landing screenshots for all 16 states, Business 11 mobile overflow check, and zero browser console/runtime errors.
+- Only Business and System are selectable. Analyst/External Partner have disabled Coming soon tags.
+- Routes contain no persona/star modes. Old persona/star paths, malformed paths and direct backstage paths resolve to Home. History/reload cannot mount legacy screens.
+- Perspective switches close overlays and return to Catalogue. Accounts retain separate drafts/requests; cross-perspective stale actions are ignored.
+- Scope accepts known EDP fields only. Multi-EDP scope includes a locked common student reference.
+- One request routes portions to named owners. Wrong-owner decisions cannot grant access. Pending, denied and expired fields remain unavailable.
+- Approvals are per use case. A new purpose with the same fields starts Pending.
+- Partial approval enables valid standalone portions. DIP Lite calculations require all relevant fields. Dashboards require reporting approval and necessary fields. Integration routes require system-intent requests.
+- Expiry removes consumption immediately. Renewal retains context but needs new decisions.
+- S3 supports ad hoc/daily/weekly. VPC requires AWS and declared network/access readiness; no live verification.
+- Evidence exposes definitions and permitted metadata, not protected raw samples. Synthetic values and operational conditions are labelled.
 
 ## Reproduce
 
-Run `npm run build`, start `npm run preview -- --host 127.0.0.1`, then run `npm test` with `TEST_URL` pointing to the preview URL. Set `BROWSER_EXECUTABLE` to an installed Chrome/Chromium executable or install Playwright Chromium. Results and screenshots are written under ignored `test-results/`.
+Build and start preview, then `npm test`. Default browser target: `http://127.0.0.1:4173`; override `TEST_URL` if necessary. Use installed Playwright Chromium or `BROWSER_EXECUTABLE`.
 
-These checks enforce the prototype's interaction model. They are not production authorisation: fixtures, approvals, queries and integrations remain simulated. Vercel configuration is unchanged.
+`tests/access.test.mjs` retains approval primitive tests. `tests/target-model.test.mjs` covers search, validated scope, linking, fulfilment, per-request authority, lifecycle and routes. `tests/target-journeys.mjs` exercises the Business/System stories, dashboards, owner decisions, filters, expiry/denial, fulfilment, modal focus and narrow layouts against the rendered app. Old test files are dormant references.
+
+These checks verify synthetic frontend behavior, not production authentication, authorization, AWS operation or audit compliance.

@@ -1,22 +1,18 @@
-# Personas and boundaries
+# Personas and shared product
 
-Design for the selected persona's job. Shared components do not imply shared navigation, data access or primary tasks.
+| Perspective | State | Job and appropriate depth |
+| --- | --- | --- |
+| Business User | Active | Find trusted data and dashboards, select plain-language fields, request and track access, then explore/report without SQL or Python using DIP Lite or embedded dashboards. |
+| System User | Active | Start in the same Catalogue, inspect the same EDP with technical disclosure, request fields and fulfilment, then integrate and operate dependable consumption. Includes technical consuming-system product managers. |
+| Analyst | Coming soon | Visible disabled presenter option. No active journey or placeholder page. |
+| External Partner | Coming soon | Visible disabled presenter option. No active journey or placeholder page. |
 
-| Persona | Jobs and first-visible concepts | Supporting detail | Success |
-| --- | --- | --- | --- |
-| Business | Questions, dashboards, briefings and decision-ready insight. Lead with the business question, period, outcome and implication. | Definitions, comparisons, source, freshness, quality and caveats. | Understand what matters and make an informed decision. |
-| Analyst | Data discovery, analysis, reproducibility and workspaces. Lead with analytical scope, datasets, method and findings as appropriate to the star. | Schemas, queries, parameters, versions, lineage, exclusions and reproducible steps. | Produce, inspect and reproduce a defensible analysis. |
-| System/Developer | Contracts, subscriptions, integration and reliability. Lead with consumer requirements, delivery and contract health. | Versions, entitlement, freshness commitments, fallback behavior, failure scenarios and migration impact. | Integrate and operate a dependable consumption contract. |
-| External Partner | Approved projects, purpose, controlled access and data minimisation. Lead with the approved scope and permitted outcome. | Minimum required fields or aggregates, masking, expiry, permitted use and access decisions. | Complete the approved project with the least necessary data. |
+The bottom-right switcher is a presenter tool. Real users need not classify themselves. Consumption intent adapts the shared request: explore/analyse, reporting/dashboard, or application/system. System questions appear only for system consumption, including when that intent is chosen from the Business perspective.
 
-The implementation uses `system` for System/Developer and `partner` for External Partner. Governance backstage is a separate presenter-controlled context, not another persona's ordinary navigation.
+Both perspectives share Home, Catalogue, EDPs, request scope and My Data. Each demonstration account retains separate draft/access state. Switching closes overlays and returns to Catalogue. Routes/history must not leak another account's requests or fields.
 
-## Strict persona isolation
+Business prioritizes purpose, meaning, freshness, quality, access and use. System can additionally inspect schema, identifiers, relationships, version, delivery, lineage, changes and operational status. Evidence follows the job. Do not expose raw identifying values in Business answers.
 
-- Scope navigation, routes, search, notifications, recent items, actions, overlays and evidence to the selected persona and star.
-- Do not expose analyst workspaces as Business primary tasks, developer provisioning as Partner tasks, or governance controls in normal user journeys.
-- Metadata discovery is distinct from permission to consume data. Apply field approvals, expiry and purpose restrictions to answers, samples, dashboards, exports and proactive findings.
-- Keep supporting detail relevant and authorized. Business users may inspect methodology without inheriting an Analyst workspace; partners may inspect controls without receiving raw data.
-- URLs, history and stale actions must not switch identity, grant access or unlock prerequisites. Only the separate prototype selector changes simulated persona/star; switching clears incompatible journey state and overlays and cancels pending transitions.
+Governance backstage is a separate presenter context, not a fifth persona or ordinary navigation item. Demo access-state controls are separate from the perspective switcher.
 
-Apply the [star model](star-model.md) within each persona. More proactive interaction never grants broader authority.
+Consumption is scoped to a use case and its approved fields. Metadata discovery does not authorize consumption. Partial approval enables valid standalone portions immediately; cross-EDP operations require all relevant approved fields. Arbitrary cross-product analysis is not implemented.

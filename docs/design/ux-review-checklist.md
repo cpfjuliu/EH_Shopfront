@@ -2,14 +2,14 @@
 
 Complete this review for every material UI change: changes to visible hierarchy, navigation, tasks, actions, components, data presentation or interaction states. Record each item as Pass, Gap or Not applicable, with brief evidence or a reason. Do not mark an untested behavior as Pass.
 
-State the affected persona/star combinations, user job, intended outcome and primary action (or why none is needed).
+State the affected active perspective, intended use, user job, outcome and primary action (or why none is needed). Apply the self-service target model, not the retired star matrix.
 
-- [ ] **Primary-task clarity:** The first view makes the job and next step obvious. A higher-star outcome is not buried beneath setup or competing tools.
+- [ ] **Primary-task clarity:** The first view makes the job and next step obvious. Discovery, scope, approval and consumption form one coherent journey with minimal explicit screens.
 - [ ] **Hierarchy:** Headings, content order, typography and spacing prioritize the decision. Supporting detail is progressively disclosed; material warnings remain visible.
 - [ ] **Unnecessary elements:** Remove decoration, cards, hero areas, helper copy and controls that do not help the task.
 - [ ] **Duplicated actions:** Each action has a clear home. Any repeated action has a demonstrated usability reason and does not compete with the primary action.
 - [ ] **Persona leakage:** Navigation, content, search, notifications, evidence, exports and contextual actions remain within persona and approved access/purpose boundaries.
-- [ ] **Star leakage:** Landing and primary interaction match the selected star. Lower-star tools remain secondary; 11★ does not accumulate every feature. Direct URLs, history, selector changes and stale actions preserve isolation and prerequisites.
+- [ ] **Retired-route isolation:** No active star modes or Analyst/External Partner journeys. URLs, history, old preferences and stale actions cannot restore deprecated experiences or bypass request permissions. Coming soon options are disabled.
 - [ ] **Accessibility:** Check semantics, labels, keyboard completion, focus, contrast, non-color cues, touch targets and assistive-technology behavior using [accessibility requirements](accessibility.md).
 - [ ] **Responsiveness:** Verify affected flows at narrow and wide widths and with zoom. Preserve content order, readable data and reachable controls without whole-page horizontal overflow.
 - [ ] **Loading/error/degraded states:** Cover loading, empty, error, denied-access, stale-data and degraded-data states. Preserve context and input, prevent repeated actions, and provide feasible recovery. Missing data is not zero.

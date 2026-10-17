@@ -346,7 +346,7 @@ function IncidentScreen({ screen, onNext, onBack }) {
   </div>
 }
 
-function GovernanceScreen({ onBack }) {
+export function GovernanceScreen({ onBack }) {
   return <div className="page-content"><PageHeader title="Data owner & governance backstage" subtitle="The operating layer behind the consumer experience. This is a prototype backstage view, not a fifth consumer persona." breadcrumbs={['Platform','Governance']} />
     <OwnerApprovals/>
     <div className="metric-grid metric-grid-4">{governanceBackstage.metrics.map(([l,v])=><Metric key={l} label={l} value={v}/>)}</div>

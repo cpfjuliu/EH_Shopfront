@@ -1,5 +1,7 @@
 # UX revamp verification — 2 October 2026
 
+Historical record of the retired experiment. The 17 October self-service rebuild explicitly supersedes its navigation/star rules. These results do not validate the active product; see `target-rebuild-review.md` and current test scripts.
+
 Scope: all four personas at 5★, 7★, 9★ and 11★. Business seeks decision-ready insight; Analyst seeks reproducible analysis; System seeks a reliable contract; Partner seeks an approved project outcome. The primary interaction remains self-service at 5★, guided assembly at 7★, a specific question/requirement at 9★ and a surfaced outcome at 11★. Healthy System 11★ needs no primary action.
 
 | Review item | Result and evidence |

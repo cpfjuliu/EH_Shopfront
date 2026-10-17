@@ -1,80 +1,75 @@
-# Edu Hub Experience Vision Prototype
+# Edu Hub — self-service target prototype
 
-React/Vite prototype demonstrating 16 role-aware journeys using **Student Academic Results**. All data, approvals, contracts and API responses are synthetic. No production SSO, SQL engine, AI service or policy enforcement backend is connected.
+**Trusted Data for MOE, empowering evidence-based decisions and services.**
 
-## Experience distinctions
+One Catalogue, shared Enterprise Data Products (EDPs), one governed access journey, and different consumption paths for Business and System users. All records, approvals, freshness, reuse examples and delivery/connectivity states are synthetic. No production SSO, AI, SQL engine, AWS infrastructure or authorization backend is connected.
 
-| Persona | 5★ — self-service | 7★ — orchestrated | 9★ — reactive intent | 11★ — outcome first |
-| --- | --- | --- | --- | --- |
-| Business | Discover datasets and dashboards; request fields; select an approved dataset for AI-assisted Chat or analysis | Describe a need; receive recommended datasets, dashboard and access steps; obtain approval and continue in dataset-scoped chat or analysis | Ask Edu Hub; resolve required permissions before returning an answer, evidence and caveats | Land on a personalised Results briefing using approved data; explore with context |
-| Analyst | Inspect SDP tabs, request access and write SQL | Describe the analysis; receive recommended products/joins and a workspace | Review method, override level, inspect delays and generate scoped SQL | Land on a refreshed analysis briefing; inspect SQL, definitions, lineage and assumptions |
-| System | Inspect a contract and integrate manually | Describe the application; coordinate identity, entitlement, sandbox and subscription | Review fields, freshness, fallback and versions; inspect scaffold and failure scenarios | See stable contract health first; inspect migration with zero consumer code changes |
-| Partner | Request fields with a reason within the approved project; receive a controlled subset | Describe the need; receive a minimum package, synthetic sample and workspace | Review minimisation, aggregation, masking, pseudonymisation and expiry | Receive an approved aggregate evaluation first; inspect controls without raw exports |
+## Active product
 
-Each combination opens directly on its own starting experience. Business 9★ starts with Ask Edu Hub; Business 11★ starts with Your Academic Results Briefing. There is one primary navigation entry per combination. The bottom-right persona/star selector is a separate presenter control and is the only place that changes simulated identity or star.
+- **Home:** discover trusted data or continue work.
+- **Catalogue:** grouped Data followed by Dashboards. Student Identity & Contact, Student Attendance and Student Academic Results are first-class EDPs. Special Needs Enrolment and Active Students (P1 - JC3) are Other Data Assets with explicitly unestablished EDP assurances/fulfilment.
+- **EDP:** shared purpose, meaning, coverage, owner, freshness, quality, reuse and field selection. Schema/version/lineage details are progressively disclosed.
+- **Request scope:** one draft across EDPs; synthetic common student references are automatically included and locked for multi-EDP scope. These fields still need owner approval. Intended use adapts the same form; one review precedes submission.
+- **My Data:** Draft, Pending Data Owner approval, Partially Approved, Active and Expired. Denied portions remain visible. Every request has its own purpose, fields and consumption destination; one use case never authorizes another automatically.
+- **DIP Lite:** approved data only; bounded Results Q&A, attendance definition and scope questions, with evidence and honest unsupported states. No arbitrary queries or cross-product reasoning.
+- **Embedded DVP dashboards:** Attendance and Results remain in Edu Hub. Reporting-use approval and required fields are checked before showing synthetic values.
+- **Integration:** S3 ad hoc/daily/weekly files or an eligible AWS direct VPC connection. Inspect version, freshness, fields, setup guidance and healthy/stale/degraded/breaking/failed states. No real endpoint, credentials or infrastructure.
 
-## UX interaction guidance
+Only Business User and System User are active. The bottom-right presenter tool shows Analyst and External Partner disabled with Coming soon tags. The separate **Demo states & governance** control selects lifecycle/operational scenarios and opens the retained Data Owner backstage.
 
-The repository design source of truth is `docs/design/`; consult `AGENTS.md` before UI work.
+The old 16-persona/star experiment is retired. “5★ target experience” is presenter terminology only. Legacy modules remain references but are not mounted or reachable through old URLs/history. Current rules explicitly supersede the old single-navigation-entry and active star-isolation rules.
 
-- Analyst, System and Partner 9★ interpret a small set of explicitly listed scenarios in `intentModel.js`. Matching is deterministic (normalized wording and documented aliases), not general AI. Unsupported input stays on the question screen. Hourly freshness is understood but rejected because the source is daily.
-- The interpreted goal, method and result follow the selected scenario. Protected Analyst/Partner findings require approved fields, including separate pseudonymous partner fields. Editing intent resets downstream journey grants.
-- Access starts with the persona's goal, retains the destination during owner approval and leads with Continue when ready. Technical field selection is disclosed progressively; approvals and expiry remain unchanged.
-- One contextual evidence pattern describes source/version, simulated refresh, coverage, calculation, owner, lineage, permitted use and caveats. Missing partner baselines/counts are explicitly unavailable, not invented.
-- Search and evidence use a shared native modal with inert background, focus containment, Escape and focus restoration. On narrow screens the presenter has a dedicated row outside the scrollable app.
-- Business 11★ has one primary exploration path; follow-ups and supporting tools are secondary. Healthy System 11★ requires no action. Business Q&A no longer repeats its visible school table through a primary “Show schools” action.
+## Demonstrate
 
-## Isolation model
+Business: Home → search Attendance → Data and Dashboard results → select Attendance fields → add Academic Results fields → inspect locked linking references → describe use → review/submit → My Data Pending → backstage approve Results only → use that portion in DIP Lite → approve remaining portions → Active → inspect evidence or an unsupported question. Results calculations need School, Subject, Education level, Academic year, Pass outcome and Result finality.
 
-`experienceCapabilities.js` defines all 16 states, including navigation, routes, features, home cards, contextual actions, search results and notifications. Stars are independent interaction models rather than cumulative feature tiers. Screen content remains in `experienceFlows.js`.
+System: presenter selects System User → same Catalogue/EDP → technical evaluation → fields → purpose and consuming system → S3 destination/cadence, or AWS/network-ready VPC → submit → My Data → owner approval → integration. Change operational condition through the separate demo controls. Healthy means no action required.
 
-The shared transition function validates the scope and originating route of actions. Journey steps unlock sequentially; URLs and history cannot grant prerequisites. Hash routes carry persona/star for clarity but never change the selected experience. Switching the demo selector resets journey state, closes overlays, cancels pending transitions and creates a new history session. Reloading a protected route returns to the current landing.
+Dashboards: search Attendance → open its dashboard → Request dashboard data retains reporting intent/destination → owner approval → Open dashboard. A generic explore grant does not automatically authorize reporting use.
 
-Business 11★ can inspect a supporting dashboard; Analyst 11★ can inspect a read-only source SDP. These are secondary evidence actions, not competing primary journeys. Governance backstage is available only from the demo control. Partner 5★/7★ receive controlled packages; Partner 9★ reviews minimisation before a scenario-specific aggregate result or approved pseudonymous package; Partner 11★ receives the approved outcome first.
+Demo access scenarios replace only the current perspective's account: First-time, Draft, Pending, Partially approved, Active, Expired or Denied. Accounts are stored separately under `edu-hub-target-v1`; old storage is ignored. Browser storage and synthetic owner decisions are not production security.
 
-## Trust and limitations
+## Engineering map
 
-- Discoverable asset types are datasets and dashboards. There is no report or separate prepared-view product.
-- The demo selector includes First-time user (no field grants) and Returning user (approved Results and Identity fields). Selecting a scenario resets the demonstration; refresh preserves that session's scenario, requests and decisions.
-- Data access accepts one Reason and fields from multiple datasets. One request is split into decisions for the respective dataset owners in governance backstage. Each approval grants its fields immediately; pending or denied portions remain unavailable. Continue your journey returns to the activity that needed access.
-- Metadata and schemas are discoverable before approval; sample values are filtered to approved fields. Data-backed answers, dashboards, workspaces, provisioning and proactive findings are gated across all 16 combinations. Dataset chat can explain an approved subset, but sample calculations require all relevant fields. Backstage expiry removes tool access immediately.
-- Business 5★ chat starts from a user-selected approved dataset. Business 7★ first recommends datasets and access steps from a stated need, then uses the same approved-data tools. Business 9★ still starts from the actual question and Business 11★ from the approved proactive briefing.
+| File | Responsibility |
+| --- | --- |
+| `TargetApp.jsx` | Active shell, shared discovery/EDP/request/My Data, presenter controls and navigation |
+| `targetModel.js` | EDP adapters, search, linking, per-use-case access, validation, lifecycle, demo states and route allowlist |
+| `TargetUI.jsx` | Shared components and evidence |
+| `TargetConsumption.jsx` | DIP Lite, dashboards and integration |
+| `accessModel.js` | Retained owner decision/field approval primitives |
+| `resultsModel.js`, `mockData.js`, `resultsProduct.js` | Reused fixtures, metadata, definitions and bounded Q&A |
+| `Modal.jsx` | Retained focus, inert background, Escape and restoration |
+| `App.jsx`, `AccessExperience.jsx` | Retained governance/owner components; other exports are dormant |
+| `target.css` | Active styling using existing tokens |
 
-- Results SDP retains Overview, Schema, Delivery, Versions, Consumers, Lineage, Quality and Access tabs. Original Attendance and Identity product fixtures remain for reference.
-- Eight synthetic schools have comparable 2025–2026 results. School I/J submissions are delayed and excluded, never zero-filled. Business answers contain no student identifiers.
-- Pass rate is passes divided by valid final results; changes are percentage points. Fixture aggregates use equal school/cohort weights. Descriptive differences do not establish causation.
-- Business Q&A supports the visible example questions: calculation, current data, subject comparison, level drivers and School A. Other questions receive an explicit limitation instead of fabricated results. This is a deterministic prototype, not general-purpose AI.
-- SQL is editable and the supplied preview can be refreshed. Edited queries require an approved external workspace; the prototype does not execute them.
-- Contract scenarios simulate stale responses, expired entitlement and breaking changes. Partner expired/denied scenarios hide results. These are UI demonstrations, not security enforcement.
-- Data Owner/Governance backstage retains certification, incidents, lifecycle and consumer-impact checks.
-- Unimplemented placeholder operations are disabled. Vercel configuration is unchanged.
-
-## Run locally
+## Run and verify
 
 ```sh
 npm ci
 npm run dev -- --host 127.0.0.1
+npm run build
+npm run preview -- --host 127.0.0.1
 ```
 
-Build with `npm run build`; preview with `npm run preview`.
-
-## Browser verification
-
-With the local server running:
+With preview running, install Playwright Chromium (`npx playwright install chromium`) or set `BROWSER_EXECUTABLE` to installed Chrome. `TEST_URL` defaults to `http://127.0.0.1:4173` in the active browser suite.
 
 ```sh
-npx playwright install chromium
 npm test
+npm run test:unit
+npm run test:journeys
 ```
 
-Optional environment variables: `TEST_URL` (default `http://127.0.0.1:5173`) and `BROWSER_EXECUTABLE` (installed Chrome/Chromium executable). Screenshots go to ignored `test-results/`.
+The active suite retains access-model tests and adds target-model and target-journey checks. Old star capability/intent/browser files remain historical references, excluded from active acceptance. Historical PASS labels do not validate the rebuild. Screenshots go under ignored `test-results/`.
 
-`npm test` runs capability/access unit tests, all 16 returning-user journeys, the 16-combination isolation audit and all 16 first-time approval gates plus the complete owner-approval lifecycle. The included UX suite (also available as `npm run test:ux`) checks all supported/unsupported intent scenarios, retained access destinations, modal focus, contextual evidence and 320/390px layouts. Run the existing suites individually with `npm run test:capabilities`, `npm run test:journeys`, `npm run test:isolation` and `npm run test:access`. Unit tests need no browser/server.
+## Limits and assumptions
 
-The journey suite checks SDP tabs, manual/prepared filters, reactive Q&A, proactive briefings, preserved context, analyst overrides, contract failures, partner expiry/denial, navigation, blank input, transition cancellation, mobile overflow, governance, logout and invalid stored preferences. The isolation suite exercises every scoped search result, notifications, contextual actions, recent cards, all foreign persona/star URLs, locked routes, reloads and browser back/forward. Browser runtime and console errors fail both suites. See `ISOLATION_AUDIT.md` for the acceptance matrix; the browser audit also writes ignored `test-results/isolation-audit.json` and 16 landing screenshots.
+- Results remains the deepest path: eight comparable schools, two delayed/excluded submissions, percentage-point comparisons and equal synthetic weights. No causal claims.
+- Contact fields and division reuse are illustrative metadata, not real contact data or live adoption evidence.
+- `student_id` is a synthetic linking reference, not a production identity architecture decision.
+- Owner decisions are per EDP portion. Partial approval enables standalone portions, not computations requiring pending fields.
+- Other Data Assets are discovery-only examples requiring owner assessment.
+- VPC readiness is declared, not verified. S3 schedules/timestamps are examples, not service commitments.
+- Unchanged Vite/Vercel configuration builds static output to `dist`. No deployment or push is part of this rebuild. Development-tool modernization remains separate scope.
 
-The existing Vite 5 toolchain is retained. `npm audit` reports two development-tool vulnerabilities (Vite/esbuild), requiring a separate toolchain upgrade. Keep the dev server on loopback. Production output is static.
-
-## Deployment
-
-Pushes to the linked GitHub branch trigger the existing Vercel integration. No new Vercel settings or environment variables are required.
+Consult `AGENTS.md` and `docs/design/` before UI work. See `ISOLATION_AUDIT.md` and `docs/design/target-rebuild-review.md` for boundaries and verification limits.

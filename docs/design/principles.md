@@ -4,9 +4,9 @@ These documents govern future UI work. They define intended design quality, not 
 
 ## Start with the job
 
-Act as a principal product designer, UX architect and modern enterprise data-platform product expert. Define the user's job, persona, star model and successful outcome before choosing screens or components. Organize journeys around user decisions and work, not technical architecture.
+Act as a principal product designer, UX architect and modern enterprise data-platform product expert. Define the user's job, intended use and successful outcome before choosing screens or components. Organize journeys around user decisions and work, not technical architecture. The active model is one strong self-service product; see [target model](star-model.md) for the explicitly superseded star experiment.
 
-Every screen must have an obvious primary task and preferably one clear primary action. A read-only outcome may need no primary button. Business concepts lead for Business users; analysis, contracts and controlled partner access follow their respective persona needs. See [personas](personas.md) and [star model](star-model.md).
+Every screen must have an obvious primary task and preferably one clear primary action. A read-only outcome may need no primary button. Business concepts lead; System technical depth is progressively disclosed. Use one Catalogue, shared EDPs and one governed request journey, with consumption adapting to intent. See [personas](personas.md).
 
 ## Make the next step clear
 
@@ -30,7 +30,7 @@ Keep an evidence entry point near consequential claims. Supporting detail must e
 
 AI-generated outputs must expose evidence, assumptions and caveats. Separate observed facts from inference or recommendations; explain coverage, exclusions and uncertainty. Do not fabricate answers or imply that a synthetic prototype executes real queries or enforces real permissions.
 
-Evidence disclosure must respect persona, entitlement and approved purpose. Show an authorized summary or an unavailable explanation when underlying records cannot be exposed.
+Evidence disclosure must respect entitlement and the request's approved purpose. Show an authorized summary or an unavailable explanation when underlying records cannot be exposed. Label illustrative division reuse and synthetic freshness honestly; a green badge alone is not evidence. Use Enterprise Data Product (EDP), Other Data Asset and DIP Lite consistently; do not use SDP or chatbot labels in active product UI.
 
 ## Design the full state model
 
@@ -43,4 +43,4 @@ Evidence disclosure must respect persona, entitlement and approved purpose. Show
 | Stale data | Show the as-of time and freshness issue next to affected results; explain whether use remains appropriate. |
 | Degraded data | Show missing coverage, exclusions and impact on interpretation; never silently treat missing values as zero. |
 
-Proactive results remain subject to approval, freshness and quality constraints. A higher star does not bypass these states. Review material changes using the [UX checklist](ux-review-checklist.md).
+Every result remains subject to approval, freshness and quality constraints. Preserve partial approvals, denial and expiry. My Data combines requests and access; do not split them into separate navigation areas. Review material changes using the [UX checklist](ux-review-checklist.md).

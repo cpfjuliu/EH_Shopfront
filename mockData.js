@@ -73,7 +73,7 @@ export const dataProducts = {
   },
   identity: {
     id: 'identity',
-    name: 'Student Identity',
+    name: 'Student Identity & Contact',
     type: 'Standard data product',
     lifecycle: 'Certified',
     version: 'v1.8',
@@ -87,9 +87,9 @@ export const dataProducts = {
     coverage: 'All active students',
     quality: '99.8% checks passed',
     authoritative: 'Yes',
-    description: 'Core student identifiers, school, class, level and enrolment context.',
+    description: 'Core student identity, school, level, enrolment and approved contact references. Synthetic metadata only.',
     source: 'Student Management System → Edu Hub',
-    definition: 'Authoritative student identity and enrolment context for approved Edu Hub use cases.',
+    definition: 'Governed student identity, enrolment and approved contact reference definitions for this synthetic demonstration.',
     allowedUse: 'Authorised MOE analysis and registered system consumers.',
     fields: [
       ['student_id', 'STRING', 'Internal student identifier', 'Sensitive', 'Not null'],
@@ -97,6 +97,7 @@ export const dataProducts = {
       ['class_code', 'STRING', 'Class identifier', 'Sensitive', 'Reference list'],
       ['level', 'STRING', 'Education level', 'Internal', 'Accepted values'],
       ['enrolment_status', 'STRING', 'Current enrolment status', 'Sensitive', 'Accepted values'],
+      ['guardian_contact', 'STRING', 'Approved contact reference; synthetic metadata only', 'Sensitive', 'Purpose restricted'],
     ],
     deliveries: [
       ['REST API', '/v1/student-identity', 'Daily refresh', 'Registered applications', '99.7% monthly'],
@@ -272,7 +273,7 @@ export const notifications = {
 
 export const governanceBackstage = {
   metrics: [
-    ['Certified SDPs', '18'],
+    ['Certified EDPs', '18'],
     ['Consumers protected by contracts', '31'],
     ['Median request-to-use', '1.6 days'],
     ['Reusable consumption this month', '74%'],
